@@ -13,6 +13,15 @@
     header p { margin:0; opacity:.82; }
     main { max-width:1180px; margin:0 auto; padding:24px 22px 48px; }
     .notice { background:#eef5ff; border:1px solid #c9ddfb; padding:12px 15px; border-radius:10px; margin-bottom:20px; color:#174a83; }
+    .import-card { margin-bottom:20px; }
+    .import-row { display:flex; align-items:center; justify-content:space-between; gap:18px; }
+    .muted { color:var(--muted); font-size:13px; margin:0; }
+    .upload-button { display:inline-block; background:var(--blue); color:#fff; padding:9px 13px; border-radius:7px; cursor:pointer; white-space:nowrap; }
+    .upload-button input { display:none; }
+    .quality { margin-top:16px; border-top:1px solid var(--line); padding-top:14px; }
+    .quality.good { color:var(--good); } .quality.warn { color:var(--warn); }
+    .quality ul { margin:8px 0 0; padding-left:20px; color:var(--ink); font-size:13px; }
+    .hidden { display:none; }
     .grid { display:grid; grid-template-columns:repeat(5,minmax(0,1fr)); gap:12px; margin-bottom:20px; }
     .card { background:var(--card); border:1px solid var(--line); border-radius:12px; padding:16px; box-shadow:0 2px 8px #12233d0a; }
     .metric-label { color:var(--muted); font-size:12px; text-transform:uppercase; letter-spacing:.05em; }
@@ -33,7 +42,7 @@
     .event { display:flex; gap:12px; padding:8px 0; border-bottom:1px solid #edf1f6; }
     .event-time { width:145px; color:var(--muted); font-size:12px; }
     footer { color:var(--muted); font-size:12px; margin-top:20px; }
-    @media (max-width:850px) { .grid,.layout { grid-template-columns:1fr 1fr; } .layout { grid-template-columns:1fr; } }
+    @media (max-width:850px) { .grid,.layout { grid-template-columns:1fr 1fr; } .layout { grid-template-columns:1fr; } .import-row { align-items:flex-start; flex-direction:column; } }
     @media (max-width:560px) { .grid { grid-template-columns:1fr 1fr; } }
   </style>
 </head>
@@ -41,12 +50,16 @@
   <header><h1>Meridian App V.001</h1><p>Order fulfillment efficiency pilot</p></header>
   <main>
     <div class="notice"><strong>Synthetic pilot data.</strong> These findings demonstrate the analysis workflow and are not claims about real Meridian operations.</div>
+    <section class="card import-card">
+      <div class="import-row"><div><h2 style="margin-bottom:4px">Load an event log</h2><p class="muted">CSV columns: order_id, activity, timestamp, department, resource, event_cost.</p></div><label class="upload-button">Choose CSV<input id="csv-file" type="file" accept=".csv,text/csv"></label></div>
+      <div id="data-quality" class="quality hidden"></div>
+    </section>
     <section class="grid" id="metrics"></section>
     <section class="layout">
       <div class="card"><h2>Efficiency findings</h2><div id="findings"></div></div>
       <div class="card"><h2>Order evidence</h2><p style="color:#64748b;font-size:13px">Select an order to inspect its timeline.</p><div id="orders"></div><div id="timeline" class="timeline"></div></div>
     </section>
-    <footer>V.001 vertical slice: synthetic data → transparent metrics → evidence-backed findings.</footer>
+    <footer>V.001 vertical slice: event log → data-quality report → transparent metrics → evidence-backed findings.</footer>
   </main>
   <script src="src/app.js"></script>
 </body>

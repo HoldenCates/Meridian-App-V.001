@@ -1,0 +1,15 @@
+order_id,activity,timestamp,department,resource,event_cost
+ORD-101,Order received,2026-10-06T08:00:00,Order Desk,Avery,1.5
+ORD-101,Payment verified,2026-10-06T08:05:00,Order Desk,Jordan,1.5
+ORD-101,Inventory checked,2026-10-06T08:20:00,Order Desk,Morgan,1.5
+ORD-101,Order picked,2026-10-06T09:00:00,Warehouse,Riley,4.5
+ORD-101,Order packed,2026-10-06T09:20:00,Warehouse,Avery,4.5
+ORD-101,Shipment created,2026-10-06T09:30:00,Shipping,Jordan,2.5
+ORD-101,Order shipped,2026-10-06T13:00:00,Shipping,Morgan,2.5
+ORD-102,Order received,2026-10-06T09:00:00,Order Desk,Avery,1.5
+ORD-102,Payment verified,2026-10-06T09:07:00,Order Desk,Jordan,1.5
+ORD-102,Inventory checked,2026-10-06T09:20:00,Order Desk,Morgan,1.5
+ORD-102,Order picked,2026-10-06T12:20:00,Warehouse,Riley,4.5
+ORD-102,Order packed,2026-10-06T12:45:00,Warehouse,Avery,4.5
+ORD-102,Shipment created,2026-10-06T13:00:00,Shipping,Jordan,2.5
+ORD-102,Order shipped,2026-10-07T10:30:00,Shipping,Morgan,2.5

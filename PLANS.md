@@ -14,9 +14,10 @@
 - [x] Display order-level evidence
 - [x] Add launch instructions
 
-## Phase 02 — Next approval gate
+## Phase 02 — CSV and data quality
 
-- [ ] Add CSV import using the same event schema
-- [ ] Add a data-quality report
+- [x] Add CSV import using the same event schema
+- [x] Add a data-quality report
+- [x] Add a sample order event log
 - [ ] Add filters and process-variant comparison
 - [ ] Review results with Meridian stakeholders

@@ -21,6 +21,11 @@ The dataset is intentionally fictional and must not be treated as a finding abou
 
 - `index.html` — portable app shell
 - `src/app.js` — synthetic data and transparent analysis logic
+- `data/sample-orders.csv` — sample event log for the CSV importer
 - `docs/PILOT-SPEC.md` — approved pilot scope
 - `AGENTS.md` — durable Codex project guidance
 - `GOALS.md` and `PLANS.md` — goals and build phases
+
+## Import a CSV
+
+Select a CSV with `order_id`, `activity`, and `timestamp` columns. Department, resource, and event_cost are optional enrichment fields. Meridian shows a data-quality report before replacing the synthetic analysis with the imported event log.

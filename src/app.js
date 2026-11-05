@@ -9,9 +9,11 @@ let pendingWorkbook = null;
 let activeAnalysisOrders = [];
 let currentProcessGraph = { nodes: [], edges: [], dominantPath: [], variants: [], orders: 0 };
 let currentProcessOverlay = "frequency";
+let currentProcessDetailMode = "exceptions";
 let selectedProcessElement = null;
 let selectedOrderId = null;
 const fieldLabels = { order_id: "Order identifier", activity: "Activity / process step", timestamp: "Event timestamp", department: "Department", resource: "Employee / resource", event_cost: "Event cost" };
+const getBottleneckTargetHours = () => Number(document.querySelector("#wait-target").value) || 0;
 
 function setImportStatus(kind, title, message) {
   const status = document.querySelector("#import-status");
@@ -130,6 +132,11 @@ function openOrderEvidence(orderId) {
 function inspectOpportunity(opportunity) {
   if (opportunity.processElementId) {
     const edge = currentProcessGraph.edges.find(item => item.id === opportunity.processElementId);
+    const visibleEdge = window.MeridianProcessView.project(currentProcessGraph, currentProcessDetailMode, getBottleneckTargetHours()).edges.some(item => item.id === opportunity.processElementId);
+    if (!visibleEdge) {
+      currentProcessDetailMode = "full";
+      updateProcessView(activeAnalysisOrders);
+    }
     window.MeridianUI.activateTab("process");
     if (edge) renderProcessDetail("edge", edge, true);
     return;
@@ -161,24 +168,45 @@ function renderProcessDetail(type, item, selectOnChart = false) {
 }
 
 function renderProcessChart() {
-  window.MeridianProcessView.render(document.querySelector("#process-chart"), currentProcessGraph, currentProcessOverlay, (type, item) => renderProcessDetail(type, item));
+  const projection = window.MeridianProcessView.render(document.querySelector("#process-chart"), currentProcessGraph, currentProcessOverlay, currentProcessDetailMode, getBottleneckTargetHours(), (type, item) => renderProcessDetail(type, item));
+  renderProcessMapStats(projection);
+}
+
+function renderProcessMapStats(projection) {
+  if (!projection) return;
+  const modeLabels = { core: "CORE", exceptions: "EXCEPTIONS", full: "FULL NETWORK" };
+  const stats = [
+    ["Mode", modeLabels[projection.detailMode]],
+    ["Activities", `${projection.coverage.activities}/${projection.coverage.totalActivities}`],
+    ["Connections", `${projection.coverage.connections}/${projection.coverage.totalConnections}`],
+    ["Orders represented", `${projection.coverage.orders}/${projection.coverage.totalOrders}`]
+  ];
+  document.querySelector("#process-map-stats").innerHTML = stats.map(([label, value]) => `<div class="map-stat"><span>${label}</span><strong>${value}</strong></div>`).join("");
 }
 
 function updateProcessView(orders) {
   currentProcessGraph = buildProcessGraph(orders);
+  const projection = window.MeridianProcessView.project(currentProcessGraph, currentProcessDetailMode, getBottleneckTargetHours());
   const overlayLabels = { frequency: "Edge width shows transition frequency.", duration: "Edge width and color show average waiting time.", cost: "Edge width and color show total target-event cost." };
   document.querySelector("#process-legend").textContent = overlayLabels[currentProcessOverlay];
   document.querySelectorAll("[data-process-overlay]").forEach(button => button.setAttribute("aria-pressed", String(button.dataset.processOverlay === currentProcessOverlay)));
+  document.querySelectorAll("[data-process-detail]").forEach(button => button.setAttribute("aria-pressed", String(button.dataset.processDetail === currentProcessDetailMode)));
+  renderProcessMapStats(projection);
+  const activitySearch = document.querySelector("#process-activity-search");
+  const selectedActivity = activitySearch.value;
+  activitySearch.innerHTML = `<option value="">Select activity</option>${currentProcessGraph.nodes.map(node => `<option value="${escapeHtml(node.id)}">${escapeHtml(node.name)}</option>`).join("")}`;
+  if (currentProcessGraph.nodes.some(node => node.id === selectedActivity)) activitySearch.value = selectedActivity;
   const metric = edge => currentProcessOverlay === "duration" ? edge.avgHours : currentProcessOverlay === "cost" ? edge.totalCost : edge.occurrences;
   const sortedEdges = [...currentProcessGraph.edges].sort((left, right) => metric(right) - metric(left));
-  document.querySelector("#process-transitions").innerHTML = sortedEdges.length ? sortedEdges.map(edge => `<tr><td>${escapeHtml(edge.source)} → ${escapeHtml(edge.target)}</td><td>${edge.cases}</td><td>${edge.occurrences}</td><td>${edge.avgHours.toFixed(1)} hrs</td><td>$${edge.totalCost.toFixed(2)}</td><td><button class="transition-button" type="button" data-transition-id="${escapeHtml(edge.id)}">Inspect</button></td></tr>`).join("") : `<tr><td colspan="6" class="muted">No transitions match the active filters.</td></tr>`;
+  document.querySelector("#process-transitions").innerHTML = sortedEdges.length ? sortedEdges.map(edge => `<tr><td>${escapeHtml(edge.source)} → ${escapeHtml(edge.target)}${projection.bottleneckIds.has(edge.id) ? ` <span class="pill bad">Bottleneck</span>` : ""}</td><td>${edge.cases}</td><td>${edge.occurrences}</td><td>${edge.avgHours.toFixed(1)} hrs</td><td>$${edge.totalCost.toFixed(2)}</td><td><button class="transition-button" type="button" data-transition-id="${escapeHtml(edge.id)}">Inspect</button></td></tr>`).join("") : `<tr><td colspan="6" class="muted">No transitions match the active filters.</td></tr>`;
   document.querySelectorAll("[data-transition-id]").forEach(button => button.addEventListener("click", () => {
     const edge = currentProcessGraph.edges.find(item => item.id === button.dataset.transitionId);
     renderProcessDetail("edge", edge, true);
   }));
-  const existing = selectedProcessElement?.type === "edge" ? currentProcessGraph.edges.find(item => item.id === selectedProcessElement.id) : currentProcessGraph.nodes.find(item => item.id === selectedProcessElement?.id);
-  const defaultItem = existing || sortedEdges[0] || currentProcessGraph.nodes[0];
-  renderProcessDetail(existing ? selectedProcessElement.type : sortedEdges[0] ? "edge" : "node", defaultItem);
+  const existing = selectedProcessElement?.type === "edge" ? projection.edges.find(item => item.id === selectedProcessElement.id) : projection.nodes.find(item => item.id === selectedProcessElement?.id);
+  const visibleSortedEdges = [...projection.edges].sort((left, right) => metric(right) - metric(left));
+  const defaultItem = existing || visibleSortedEdges[0] || projection.nodes[0];
+  renderProcessDetail(existing ? selectedProcessElement.type : visibleSortedEdges[0] ? "edge" : "node", defaultItem);
   if (!document.querySelector("#panel-process").hidden) renderProcessChart();
 }
 
@@ -242,6 +270,21 @@ document.querySelectorAll("[data-process-overlay]").forEach(button => button.add
   currentProcessOverlay = button.dataset.processOverlay;
   updateProcessView(activeAnalysisOrders);
 }));
+document.querySelectorAll("[data-process-detail]").forEach(button => button.addEventListener("click", () => {
+  currentProcessDetailMode = button.dataset.processDetail;
+  updateProcessView(activeAnalysisOrders);
+}));
+document.querySelector("#process-activity-search").addEventListener("change", event => {
+  if (!event.target.value) return;
+  const node = currentProcessGraph.nodes.find(item => item.id === event.target.value);
+  if (!node) return;
+  if (!window.MeridianProcessView.project(currentProcessGraph, currentProcessDetailMode, getBottleneckTargetHours()).nodes.some(item => item.id === node.id)) {
+    currentProcessDetailMode = "full";
+    updateProcessView(activeAnalysisOrders);
+  }
+  renderProcessDetail("node", node, true);
+});
+document.querySelector("#fit-process-map").addEventListener("click", () => window.MeridianProcessView.fit());
 window.addEventListener("meridian:tabchange", event => { if (event.detail.name === "process") renderProcessChart(); });
 
 document.querySelectorAll("#department-filter, #status-filter, #from-filter, #to-filter").forEach(control => control.addEventListener("change", render));

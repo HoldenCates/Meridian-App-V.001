@@ -17,7 +17,7 @@ assert.equal(panels.length, 5);
 tabs.forEach(match => assert.ok(ids.includes(match[1]), `Missing tab panel ${match[1]}`));
 panels.forEach(match => assert.ok(ids.includes(match[1]), `Missing tab ${match[1]}`));
 
-const requiredElements = ["metrics", "findings", "process-chart", "process-transitions", "process-detail", "variants", "opportunities", "orders", "timeline", "case-search", "case-sort", "case-result-count", "csv-file", "import-status", "data-summary", "mapping-panel", "department-filter", "wait-target"];
+const requiredElements = ["metrics", "findings", "process-chart", "process-map-stats", "process-activity-search", "fit-process-map", "process-transitions", "process-detail", "variants", "opportunities", "orders", "timeline", "case-search", "case-sort", "case-result-count", "csv-file", "import-status", "data-summary", "mapping-panel", "department-filter", "wait-target"];
 requiredElements.forEach(id => assert.ok(ids.includes(id), `Missing application element ${id}`));
 assert.match(html, /<link rel="stylesheet" href="src\/styles\.css">/);
 assert.match(html, /<link rel="stylesheet" href="src\/theme-holden\.css">/);

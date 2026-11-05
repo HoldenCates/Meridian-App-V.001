@@ -42,6 +42,10 @@
   --chart-edge-label:#c8c8c0;
   --chart-edge-label-bg:rgba(0,0,0,.92);
   --chart-selection:#ffffff;
+  --chart-secondary-edge:#42423f;
+  --chart-node-metric:#8f8b7f;
+  --chart-bottleneck-halo:rgba(255,74,61,.42);
+  --chart-backbone-halo:rgba(225,185,63,.2);
 }
 
 html { background:#000; }
@@ -173,6 +177,16 @@ button:focus-visible,.upload-button:focus-within { outline:2px solid #e1b93f; ou
 .segmented-control { border-color:#2b2a26; border-radius:0; background:#020202; }
 .segmented-control button { border-radius:1px; }
 .segmented-control button[aria-pressed="true"] { color:#000; background:#e1b93f; box-shadow:none; }
+.process-toolbar { background:#030303; }
+.process-control-group + .process-control-group { padding-left:20px; border-left:1px solid #1d1d1b; }
+.process-map-status { color:#bdbdb7; }
+.map-stat-grid { border-color:#24231f; background:#030303; }
+.map-stat { border-color:#24231f; background:linear-gradient(180deg,#070707,#020202); }
+.map-stat span { color:#696965; font-weight:600; }
+.map-stat strong { color:#deded8; font-weight:600; }
+.map-stat:first-child strong { color:#f4d66d; }
+.map-actions .filter select { background:#000; }
+.map-live-indicator { color:#e1b93f; text-shadow:0 0 10px rgba(225,185,63,.2); }
 .process-chart { border-color:#2b2a26; border-radius:0; background-color:#000; background-image:linear-gradient(rgba(225,185,63,.03) 1px,transparent 1px),linear-gradient(90deg,rgba(225,185,63,.03) 1px,transparent 1px); background-size:24px 24px; }
 .process-detail-kicker { color:#e1b93f; font-family:var(--font-mono); font-weight:600; }
 .detail-metric { border-color:#24231f; border-radius:0; background:#020202; }
@@ -209,4 +223,5 @@ button:focus-visible,.upload-button:focus-within { outline:2px solid #e1b93f; ou
   .eyebrow-row { align-items:flex-start; flex-direction:column; gap:5px; }
   .build-badge { display:none; }
   .page-heading::after { display:none; }
+  .process-control-group + .process-control-group { padding-top:14px; padding-left:0; border-top:1px solid #1d1d1b; border-left:0; }
 }

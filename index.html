@@ -62,16 +62,16 @@
     <section id="panel-process" class="tab-panel" role="tabpanel" aria-labelledby="tab-process" data-tab-panel="process" tabindex="0" hidden>
       <div class="page-heading" data-console-label="NET // PROCESS MAP"><div><h2>Process</h2><p>Compare the paths orders followed and where time accumulated.</p></div></div>
       <section class="card process-toolbar">
-        <div><strong>Map overlay</strong><p id="process-legend" class="muted">Edge width shows transition frequency.</p></div>
-        <div class="segmented-control" aria-label="Process map overlay">
-          <button type="button" data-process-overlay="frequency" aria-pressed="true">Frequency</button>
-          <button type="button" data-process-overlay="duration" aria-pressed="false">Average wait</button>
-          <button type="button" data-process-overlay="cost" aria-pressed="false">Cost</button>
-        </div>
+        <div class="process-control-group"><div><strong>Map detail</strong><p class="muted">Start with the backbone, then reveal exceptions.</p></div><div class="segmented-control" aria-label="Process map detail"><button type="button" data-process-detail="core" aria-pressed="false">Core</button><button type="button" data-process-detail="exceptions" aria-pressed="true">Exceptions</button><button type="button" data-process-detail="full" aria-pressed="false">Full network</button></div></div>
+        <div class="process-control-group"><div><strong>Metric overlay</strong><p id="process-legend" class="muted">Edge width shows transition frequency.</p></div><div class="segmented-control" aria-label="Process map overlay"><button type="button" data-process-overlay="frequency" aria-pressed="true">Frequency</button><button type="button" data-process-overlay="duration" aria-pressed="false">Average wait</button><button type="button" data-process-overlay="cost" aria-pressed="false">Cost</button></div></div>
+      </section>
+      <section class="process-map-status" aria-label="Process map status">
+        <div id="process-map-stats" class="map-stat-grid" aria-live="polite"></div>
+        <div class="map-actions"><div class="filter compact-filter"><label for="process-activity-search">Find activity</label><select id="process-activity-search"><option value="">Select activity</option></select></div><button id="fit-process-map" type="button">Fit map</button></div>
       </section>
       <section class="process-layout section-gap">
         <div class="card process-map-card">
-          <div class="card-heading"><div><h2>Discovered process map</h2><p class="muted">Select an activity or transition. Drag to pan and scroll to zoom.</p></div></div>
+          <div class="card-heading"><div><h2>Operational backbone</h2><p class="muted">Gold marks the dominant route. Red identifies the longest waiting-time bottlenecks.</p></div><span class="map-live-indicator">● LIVE TRACE</span></div>
           <div id="process-chart" class="process-chart" role="img" aria-label="Interactive order fulfillment process map"></div>
         </div>
         <aside id="process-detail" class="card process-detail" aria-live="polite"></aside>

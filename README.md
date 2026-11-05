@@ -20,6 +20,8 @@ Synthetic order events are transformed into:
 - Accessible Overview, Process, Opportunities, Cases, and Data views
 - Interactive process map with frequency, waiting-time, and cost overlays
 - Activity and transition evidence with direct order drill-down
+- Backbone-first process map with Core, Exceptions, and Full Network detail modes
+- Bottleneck halos tied to the active wait target, map coverage telemetry, activity search, and fit-to-screen
 - Opportunity-to-process and opportunity-to-case evidence links
 - Searchable, sortable case review with cycle-time and status context
 - Guided file-import status from upload through validated analysis

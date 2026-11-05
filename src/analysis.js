@@ -39,7 +39,12 @@
 
   function parseCsv(text) {
     const rows = parseCsvRows(String(text).replace(/^\uFEFF/, ""));
-    const labels = rows.shift() || [];
+    return parseTabularRows(rows);
+  }
+
+  function parseTabularRows(rows) {
+    const normalizedRows = (rows || []).map(row => row.map(value => value instanceof Date ? value.toISOString() : String(value ?? "").trim()));
+    const labels = normalizedRows.shift() || [];
     const seen = {};
     const headers = labels.map((label, index) => {
       const base = normalizeHeader(label) || `column_${index + 1}`;
@@ -49,7 +54,7 @@
     return {
       headers,
       columns: headers.map((key, index) => ({ key, label: labels[index] || key })),
-      events: rows.filter(row => row.some(Boolean)).map(row => Object.fromEntries(headers.map((header, index) => [header, row[index] ?? ""])))
+      events: normalizedRows.filter(row => row.some(Boolean)).map(row => Object.fromEntries(headers.map((header, index) => [header, row[index] ?? ""])))
     };
   }
 
@@ -203,7 +208,7 @@
       .sort((left, right) => right.estimatedValue - left.estimatedValue || right.affectedOrders - left.affectedOrders);
   }
 
-  const api = { requiredColumns, importFields, parseCsv, suggestMappings, mapEvents, validateMapping, validateEvents, analyzeEvents, filterOrders, summarizeOrders, buildVariants, rankOpportunities };
+  const api = { requiredColumns, importFields, parseCsv, parseTabularRows, suggestMappings, mapEvents, validateMapping, validateEvents, analyzeEvents, filterOrders, summarizeOrders, buildVariants, rankOpportunities };
   root.MeridianAnalysis = api;
   if (typeof module !== "undefined" && module.exports) module.exports = api;
 })(typeof window !== "undefined" ? window : globalThis);

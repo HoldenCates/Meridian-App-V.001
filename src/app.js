@@ -1,9 +1,11 @@
 const { importFields, parseCsv, suggestMappings, mapEvents, validateMapping, validateEvents, analyzeEvents, filterOrders, summarizeOrders, buildVariants, rankOpportunities } = window.MeridianAnalysis;
+const { parseWorkbook } = window.MeridianWorkbookImport;
 const { syntheticEvents } = window.MeridianSampleData;
 const escapeHtml = value => String(value).replace(/[&<>'"]/g, character => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", "'": "&#39;", '"': "&quot;" }[character]));
 let currentOrders = analyzeEvents(syntheticEvents);
 let currentSource = "synthetic pilot data";
 let pendingImport = null;
+let pendingWorkbook = null;
 const fieldLabels = { order_id: "Order identifier", activity: "Activity / process step", timestamp: "Event timestamp", department: "Department", resource: "Employee / resource", event_cost: "Event cost" };
 
 function showQuality(result, source) {
@@ -33,6 +35,25 @@ function renderMapping(parsed, fileName) {
   const quality = document.querySelector("#data-quality");
   quality.className = "quality good";
   quality.innerHTML = `<strong>${escapeHtml(fileName)} loaded</strong><ul><li>${parsed.events.length} rows and ${parsed.columns.length} columns found. Review the suggested mapping before analysis.</li></ul>`;
+}
+
+function showImportError(message) {
+  const quality = document.querySelector("#data-quality");
+  quality.className = "quality warn";
+  quality.innerHTML = `<strong>File could not be loaded</strong><ul><li>${escapeHtml(message)}</li></ul>`;
+}
+
+function loadWorkbookSheet(sheetName) {
+  try {
+    const result = parseWorkbook(pendingWorkbook.buffer, sheetName);
+    const sheetSelect = document.querySelector("#sheet-select");
+    sheetSelect.innerHTML = result.sheetNames.map(name => `<option value="${escapeHtml(name)}">${escapeHtml(name)}</option>`).join("");
+    sheetSelect.value = result.sheetName;
+    document.querySelector("#workbook-controls").classList.remove("hidden");
+    renderMapping(result.parsed, `${pendingWorkbook.fileName} — ${result.sheetName}`);
+  } catch (error) {
+    showImportError(error.message);
+  }
 }
 
 function applyMapping() {
@@ -92,13 +113,22 @@ document.querySelector("#csv-file").addEventListener("change", event => {
   if (!file) return;
   const reader = new FileReader();
   reader.onload = () => {
-    const parsed = parseCsv(reader.result);
-    renderMapping(parsed, file.name);
+    if (/\.(xlsx|xls|xlsb)$/i.test(file.name)) {
+      pendingWorkbook = { buffer: reader.result, fileName: file.name };
+      loadWorkbookSheet();
+    } else {
+      pendingWorkbook = null;
+      document.querySelector("#workbook-controls").classList.add("hidden");
+      renderMapping(parseCsv(reader.result), file.name);
+    }
   };
-  reader.readAsText(file);
+  reader.onerror = () => showImportError("The browser could not read the selected file.");
+  if (/\.(xlsx|xls|xlsb)$/i.test(file.name)) reader.readAsArrayBuffer(file);
+  else reader.readAsText(file);
 });
 
 document.querySelector("#apply-mapping").addEventListener("click", applyMapping);
+document.querySelector("#sheet-select").addEventListener("change", event => loadWorkbookSheet(event.target.value));
 
 document.querySelectorAll("#department-filter, #status-filter, #from-filter, #to-filter").forEach(control => control.addEventListener("change", render));
 document.querySelectorAll("#wait-target, #hour-value").forEach(control => control.addEventListener("input", render));

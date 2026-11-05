@@ -75,11 +75,12 @@
   <main>
     <div class="notice"><strong>Synthetic pilot data.</strong> These findings demonstrate the analysis workflow and are not claims about real Meridian operations.</div>
     <section class="card import-card">
-      <div class="import-row"><div><h2 style="margin-bottom:4px">Load an event log</h2><p class="muted">Upload a CSV using your existing column names. Meridian will help map them.</p></div><label class="upload-button">Choose CSV<input id="csv-file" type="file" accept=".csv,text/csv"></label></div>
+      <div class="import-row"><div><h2 style="margin-bottom:4px">Load an event log</h2><p class="muted">Upload a CSV or Excel workbook using your existing column names. Meridian will help map them.</p></div><label class="upload-button">Choose file<input id="csv-file" type="file" accept=".csv,.xlsx,.xls,.xlsb,text/csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel"></label></div>
       <div id="data-quality" class="quality hidden"></div>
     </section>
     <section id="mapping-panel" class="card mapping-card hidden">
       <h2>Review column mapping</h2><p class="muted">Confirm what each source column means. Fields marked * are required.</p>
+      <div id="workbook-controls" class="filter hidden" style="max-width:360px;margin-top:14px"><label for="sheet-select">Worksheet to import</label><select id="sheet-select"></select></div>
       <div id="mapping-fields" class="mapping-grid"></div>
       <h2>Source preview</h2><div class="preview-wrap"><table id="mapping-preview"></table></div>
       <button id="apply-mapping" class="primary-button" type="button">Analyze mapped data</button>
@@ -105,7 +106,9 @@
     <section class="card variants-card"><h2>Process variants</h2><p class="muted">Compare the actual paths orders followed. Repeated steps expose rework and alternate paths.</p><table><thead><tr><th>#</th><th>Activity path</th><th>Orders</th><th>Avg. cycle</th><th>Late</th><th>Rework</th></tr></thead><tbody id="variants"></tbody></table></section>
     <footer>V.001 vertical slice: event log → data-quality report → filters → variants → ranked, evidence-backed opportunities.</footer>
   </main>
+  <script src="vendor/xlsx.full.min.js"></script>
   <script src="src/analysis.js"></script>
+  <script src="src/workbook-import.js"></script>
   <script src="src/sample-data.js"></script>
   <script src="src/app.js"></script>
 </body>

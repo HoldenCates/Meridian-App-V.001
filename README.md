@@ -36,8 +36,10 @@ Financial figures are scenario estimates. Delay value is calculated from recover
 
 ## Import a CSV
 
-Select a CSV using your existing business column names. Meridian suggests mappings for the required order identifier, activity, and timestamp fields, plus optional department, resource, and event cost fields. Review a source preview and confirm the mapping before analysis. The importer supports quoted commas and escaped quotes.
+Select a CSV or Excel workbook using your existing business column names. For workbooks, choose the worksheet to analyze. Meridian suggests mappings for the required order identifier, activity, and timestamp fields, plus optional department, resource, and event cost fields. Review a source preview and confirm the mapping before analysis. CSV import supports quoted commas and escaped quotes.
+
+Excel import is powered by the locally vendored SheetJS Community Edition 0.20.3. The app does not contact a CDN at runtime. See `THIRD_PARTY_NOTICES.md` and `vendor/LICENSE-SheetJS.txt` for attribution and license terms.
 
 ## Verify the calculations
 
-With Node.js installed, run `node tests/analysis.test.js`. The tests cover CSV parsing, validation, cycle-time status, rework, filtering, totals, process variants, and opportunity calculations.
+With Node.js installed, run `node tests/run-all.js`. The tests cover CSV and Excel import, mapping, validation, cycle-time status, rework, filtering, totals, process variants, and opportunity calculations.

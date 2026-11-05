@@ -33,6 +33,8 @@ The built-in fictional dataset contains 24 orders across multiple process varian
 
 Imported CSV files may use different column names. The mapping step suggests common aliases, requires the three core fields, prevents one source column from being used twice, and previews the source before analysis.
 
+Excel workbooks use the same controlled mapping process. The user selects one worksheet at a time, reviews the source preview, and confirms the mapping before the app replaces the active analysis.
+
 ## Initial questions
 
 - Where does fulfillment spend the most time waiting?

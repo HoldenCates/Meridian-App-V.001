@@ -36,4 +36,13 @@
 - [x] Let users review required and optional field mappings
 - [x] Preview source rows before analysis
 - [x] Support quoted CSV values and duplicate column names
-- [ ] Add spreadsheet workbook import after CSV workflow validation
+- [x] Add Excel workbook import and worksheet selection
+- [ ] Validate import with larger and intentionally messy workbooks
+
+## Phase 05 — UI and scenario validation
+
+- [ ] Separate major workflows into tabs
+- [ ] Complete the Meridian UI redesign
+- [ ] Build several realistic business datasets
+- [ ] Run end-to-end shipment and fulfillment scenarios
+- [ ] Test portable deployment on another computer

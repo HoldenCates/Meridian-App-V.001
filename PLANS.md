@@ -39,10 +39,16 @@
 - [x] Add Excel workbook import and worksheet selection
 - [ ] Validate import with larger and intentionally messy workbooks
 
-## Phase 05 — UI and scenario validation
+## Meridian App V.002 — UI and scenario validation
 
-- [ ] Separate major workflows into tabs
-- [ ] Complete the Meridian UI redesign
+- [x] Research process-mining and dashboard UI references
+- [x] Select the client-side visualization approach
+- [x] Define the five-view application structure
+- [ ] Approve the V.002 UI plan and visual direction
+- [ ] Build the UI foundation and Overview vertical slice
+- [ ] Build the interactive Process view
+- [ ] Migrate Opportunities, Cases, and Data views
+- [ ] Fine-tune accessibility, responsiveness, and performance
 - [ ] Build several realistic business datasets
 - [ ] Run end-to-end shipment and fulfillment scenarios
 - [ ] Test portable deployment on another computer

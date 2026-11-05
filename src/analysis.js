@@ -1,15 +1,77 @@
 (function attachMeridianAnalysis(root) {
   const requiredColumns = ["order_id", "activity", "timestamp"];
+  const importFields = ["order_id", "activity", "timestamp", "department", "resource", "event_cost"];
+  const fieldAliases = {
+    order_id: ["order_id", "order id", "order number", "order_number", "order no", "case_id", "case id", "case", "id"],
+    activity: ["activity", "activity name", "event", "event name", "step", "process step", "status", "action"],
+    timestamp: ["timestamp", "event time", "event_time", "datetime", "date time", "completed at", "completed_at", "created at", "created_at", "date"],
+    department: ["department", "team", "function", "business unit", "business_unit", "group"],
+    resource: ["resource", "employee", "user", "owner", "assignee", "operator", "person"],
+    event_cost: ["event_cost", "event cost", "cost", "handling cost", "handling_cost", "labor cost", "labour cost"]
+  };
   const average = values => values.reduce((sum, value) => sum + value, 0) / (values.length || 1);
   const hoursBetween = (start, end) => (new Date(end) - new Date(start)) / 36e5;
+  const normalizeHeader = value => String(value).trim().toLowerCase().replace(/[^a-z0-9]+/g, "_").replace(/^_|_$/g, "");
+
+  function parseCsvRows(text) {
+    const rows = [];
+    let row = [];
+    let value = "";
+    let quoted = false;
+    for (let index = 0; index < text.length; index += 1) {
+      const character = text[index];
+      if (character === '"') {
+        if (quoted && text[index + 1] === '"') { value += '"'; index += 1; }
+        else quoted = !quoted;
+      } else if (character === "," && !quoted) {
+        row.push(value.trim()); value = "";
+      } else if ((character === "\n" || character === "\r") && !quoted) {
+        if (character === "\r" && text[index + 1] === "\n") index += 1;
+        row.push(value.trim());
+        if (row.some(cell => cell !== "")) rows.push(row);
+        row = []; value = "";
+      } else value += character;
+    }
+    row.push(value.trim());
+    if (row.some(cell => cell !== "")) rows.push(row);
+    return rows;
+  }
 
   function parseCsv(text) {
-    const rows = String(text).trim().split(/\r?\n/).map(row => row.split(",").map(value => value.trim().replace(/^"|"$/g, "")));
-    const headers = (rows.shift() || []).map(header => header.toLowerCase());
+    const rows = parseCsvRows(String(text).replace(/^\uFEFF/, ""));
+    const labels = rows.shift() || [];
+    const seen = {};
+    const headers = labels.map((label, index) => {
+      const base = normalizeHeader(label) || `column_${index + 1}`;
+      seen[base] = (seen[base] || 0) + 1;
+      return seen[base] === 1 ? base : `${base}_${seen[base]}`;
+    });
     return {
       headers,
+      columns: headers.map((key, index) => ({ key, label: labels[index] || key })),
       events: rows.filter(row => row.some(Boolean)).map(row => Object.fromEntries(headers.map((header, index) => [header, row[index] ?? ""])))
     };
+  }
+
+  function suggestMappings(columns) {
+    const candidates = (columns || []).map(column => typeof column === "string" ? { key: column, label: column } : column);
+    return Object.fromEntries(importFields.map(field => {
+      const aliases = fieldAliases[field].map(normalizeHeader);
+      const exact = candidates.find(column => aliases.includes(normalizeHeader(column.key)) || aliases.includes(normalizeHeader(column.label)));
+      const partial = candidates.find(column => aliases.some(alias => alias.length > 3 && (normalizeHeader(column.key).includes(alias) || alias.includes(normalizeHeader(column.key)))));
+      return [field, (exact || partial)?.key || ""];
+    }));
+  }
+
+  function mapEvents(events, mapping) {
+    return events.map(event => Object.fromEntries(importFields.map(field => [field, mapping[field] ? event[mapping[field]] ?? "" : ""])));
+  }
+
+  function validateMapping(mapping) {
+    const missingRequired = requiredColumns.filter(field => !mapping[field]);
+    const selected = Object.entries(mapping).filter(([, source]) => source);
+    const duplicatedSources = [...new Set(selected.map(([, source]) => source).filter((source, index, sources) => sources.indexOf(source) !== index))];
+    return { missingRequired, duplicatedSources, valid: missingRequired.length === 0 && duplicatedSources.length === 0 };
   }
 
   function validateEvents(events, headers) {
@@ -19,7 +81,7 @@
       .map(column => `${column}: ${events.filter(event => !event[column]).length} missing`);
     const invalidTimestamps = events.filter(event => event.timestamp && Number.isNaN(new Date(event.timestamp).getTime())).length;
     const duplicateEvents = events.length - new Set(events.map(event => `${event.order_id}|${event.activity}|${event.timestamp}`)).size;
-    return { missingColumns, missingValues, invalidTimestamps, duplicateEvents, valid: missingColumns.length === 0 && events.length > 0 };
+    return { missingColumns, missingValues, invalidTimestamps, duplicateEvents, valid: missingColumns.length === 0 && missingValues.length === 0 && invalidTimestamps === 0 && events.length > 0 };
   }
 
   function analyzeEvents(events) {
@@ -141,7 +203,7 @@
       .sort((left, right) => right.estimatedValue - left.estimatedValue || right.affectedOrders - left.affectedOrders);
   }
 
-  const api = { requiredColumns, parseCsv, validateEvents, analyzeEvents, filterOrders, summarizeOrders, buildVariants, rankOpportunities };
+  const api = { requiredColumns, importFields, parseCsv, suggestMappings, mapEvents, validateMapping, validateEvents, analyzeEvents, filterOrders, summarizeOrders, buildVariants, rankOpportunities };
   root.MeridianAnalysis = api;
   if (typeof module !== "undefined" && module.exports) module.exports = api;
 })(typeof window !== "undefined" ? window : globalThis);

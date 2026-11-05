@@ -1,8 +1,10 @@
-const { parseCsv, validateEvents, analyzeEvents, filterOrders, summarizeOrders, buildVariants, rankOpportunities } = window.MeridianAnalysis;
+const { importFields, parseCsv, suggestMappings, mapEvents, validateMapping, validateEvents, analyzeEvents, filterOrders, summarizeOrders, buildVariants, rankOpportunities } = window.MeridianAnalysis;
 const { syntheticEvents } = window.MeridianSampleData;
 const escapeHtml = value => String(value).replace(/[&<>'"]/g, character => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", "'": "&#39;", '"': "&quot;" }[character]));
 let currentOrders = analyzeEvents(syntheticEvents);
 let currentSource = "synthetic pilot data";
+let pendingImport = null;
+const fieldLabels = { order_id: "Order identifier", activity: "Activity / process step", timestamp: "Event timestamp", department: "Department", resource: "Employee / resource", event_cost: "Event cost" };
 
 function showQuality(result, source) {
   const quality = document.querySelector("#data-quality");
@@ -17,6 +19,42 @@ function populateDepartments(orders) {
   const departments = [...new Set(orders.flatMap(order => order.departments))].sort();
   select.innerHTML = `<option value="all">All departments</option>${departments.map(department => `<option value="${escapeHtml(department)}">${escapeHtml(department)}</option>`).join("")}`;
   if (departments.includes(selected)) select.value = selected;
+}
+
+function renderMapping(parsed, fileName) {
+  pendingImport = { ...parsed, fileName };
+  const suggestions = suggestMappings(parsed.columns);
+  const options = field => `<option value="">${["order_id", "activity", "timestamp"].includes(field) ? "Select a column" : "Not provided"}</option>${parsed.columns.map(column => `<option value="${escapeHtml(column.key)}">${escapeHtml(column.label)}</option>`).join("")}`;
+  document.querySelector("#mapping-fields").innerHTML = importFields.map(field => `<div class="filter"><label for="map-${field}">${escapeHtml(fieldLabels[field])}${["order_id", "activity", "timestamp"].includes(field) ? " *" : ""}</label><select id="map-${field}" data-map-field="${field}">${options(field)}</select></div>`).join("");
+  importFields.forEach(field => { document.querySelector(`#map-${field}`).value = suggestions[field]; });
+  const previewRows = parsed.events.slice(0, 4);
+  document.querySelector("#mapping-preview").innerHTML = `<thead><tr>${parsed.columns.map(column => `<th>${escapeHtml(column.label)}</th>`).join("")}</tr></thead><tbody>${previewRows.map(row => `<tr>${parsed.columns.map(column => `<td>${escapeHtml(row[column.key])}</td>`).join("")}</tr>`).join("")}</tbody>`;
+  document.querySelector("#mapping-panel").classList.remove("hidden");
+  const quality = document.querySelector("#data-quality");
+  quality.className = "quality good";
+  quality.innerHTML = `<strong>${escapeHtml(fileName)} loaded</strong><ul><li>${parsed.events.length} rows and ${parsed.columns.length} columns found. Review the suggested mapping before analysis.</li></ul>`;
+}
+
+function applyMapping() {
+  if (!pendingImport) return;
+  const mapping = Object.fromEntries([...document.querySelectorAll("[data-map-field]")].map(select => [select.dataset.mapField, select.value]));
+  const mappingValidation = validateMapping(mapping);
+  if (!mappingValidation.valid) {
+    const issues = [...mappingValidation.missingRequired.map(field => `Map the required ${field} field.`), ...mappingValidation.duplicatedSources.map(source => `The ${source} column is mapped more than once.`)];
+    const quality = document.querySelector("#data-quality");
+    quality.className = "quality warn";
+    quality.innerHTML = `<strong>Mapping needs attention</strong><ul>${issues.map(issue => `<li>${escapeHtml(issue)}</li>`).join("")}</ul>`;
+    return;
+  }
+  const mappedEvents = mapEvents(pendingImport.events, mapping);
+  const validation = validateEvents(mappedEvents, importFields.filter(field => mapping[field]));
+  showQuality(validation, pendingImport.fileName);
+  if (validation.valid) {
+    currentOrders = analyzeEvents(mappedEvents);
+    currentSource = `${pendingImport.fileName} (mapped import)`;
+    populateDepartments(currentOrders);
+    render();
+  }
 }
 
 function getFilters() {
@@ -55,12 +93,12 @@ document.querySelector("#csv-file").addEventListener("change", event => {
   const reader = new FileReader();
   reader.onload = () => {
     const parsed = parseCsv(reader.result);
-    const validation = validateEvents(parsed.events, parsed.headers);
-    showQuality(validation, file.name);
-    if (validation.valid) { currentOrders = analyzeEvents(parsed.events); currentSource = file.name; populateDepartments(currentOrders); render(); }
+    renderMapping(parsed, file.name);
   };
   reader.readAsText(file);
 });
+
+document.querySelector("#apply-mapping").addEventListener("click", applyMapping);
 
 document.querySelectorAll("#department-filter, #status-filter, #from-filter, #to-filter").forEach(control => control.addEventListener("change", render));
 document.querySelectorAll("#wait-target, #hour-value").forEach(control => control.addEventListener("input", render));

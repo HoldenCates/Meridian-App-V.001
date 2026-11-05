@@ -36,7 +36,7 @@ Financial figures are scenario estimates. Delay value is calculated from recover
 
 ## Import a CSV
 
-Select a CSV with `order_id`, `activity`, and `timestamp` columns. Department, resource, and event_cost are optional enrichment fields. Meridian shows a data-quality report before replacing the synthetic analysis with the imported event log.
+Select a CSV using your existing business column names. Meridian suggests mappings for the required order identifier, activity, and timestamp fields, plus optional department, resource, and event cost fields. Review a source preview and confirm the mapping before analysis. The importer supports quoted commas and escaped quotes.
 
 ## Verify the calculations
 

@@ -29,3 +29,11 @@
 - [x] Rank opportunities by time and modeled financial impact
 - [x] Expose assumptions and financial guardrails
 - [ ] Review results with Meridian stakeholders
+
+## Phase 04 — Business-ready imports
+
+- [x] Suggest mappings for common business column names
+- [x] Let users review required and optional field mappings
+- [x] Preview source rows before analysis
+- [x] Support quoted CSV values and duplicate column names
+- [ ] Add spreadsheet workbook import after CSV workflow validation

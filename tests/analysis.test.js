@@ -1,5 +1,5 @@
 const assert = require("node:assert/strict");
-const { parseCsv, validateEvents, analyzeEvents, filterOrders, summarizeOrders, buildVariants, rankOpportunities } = require("../src/analysis.js");
+const { parseCsv, suggestMappings, mapEvents, validateMapping, validateEvents, analyzeEvents, filterOrders, summarizeOrders, buildVariants, rankOpportunities } = require("../src/analysis.js");
 const { syntheticEvents } = require("../src/sample-data.js");
 
 const csv = `order_id,activity,timestamp,department,event_cost
@@ -14,6 +14,20 @@ B,Shipped,2026-01-02T10:00:00,Shipping,3`;
 const parsed = parseCsv(csv);
 assert.equal(parsed.events.length, 7);
 assert.equal(validateEvents(parsed.events, parsed.headers).valid, true);
+
+const businessCsv = parseCsv(`Order Number,Process Step,Completed At,Team,Notes
+"100, A",Packed,2026-01-01T09:00:00,"West, Team","He said ""go"""`);
+assert.equal(businessCsv.events[0].order_number, "100, A");
+assert.equal(businessCsv.events[0].team, "West, Team");
+assert.equal(businessCsv.events[0].notes, `He said "go"`);
+const suggested = suggestMappings(businessCsv.columns);
+assert.deepEqual({ order_id: suggested.order_id, activity: suggested.activity, timestamp: suggested.timestamp, department: suggested.department }, { order_id: "order_number", activity: "process_step", timestamp: "completed_at", department: "team" });
+assert.equal(validateMapping(suggested).valid, true);
+const businessEvents = mapEvents(businessCsv.events, suggested);
+assert.equal(businessEvents[0].order_id, "100, A");
+assert.equal(businessEvents[0].department, "West, Team");
+assert.equal(validateMapping({ order_id: "id", activity: "id", timestamp: "time" }).valid, false);
+assert.deepEqual(parseCsv("Status,Status\nOpen,Closed").headers, ["status", "status_2"]);
 
 const orders = analyzeEvents(parsed.events);
 assert.equal(orders.length, 2);
@@ -46,4 +60,5 @@ assert.ok(rankOpportunities(pilotOrders, { waitTargetHours: 2, valuePerHour: 35 
 
 const invalid = validateEvents([{ order_id: "A", activity: "Received", timestamp: "not-a-date" }], ["order_id", "activity", "timestamp"]);
 assert.equal(invalid.invalidTimestamps, 1);
+assert.equal(invalid.valid, false);
 console.log("Analysis checks passed.");

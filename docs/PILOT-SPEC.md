@@ -31,6 +31,8 @@ The built-in fictional dataset contains 24 orders across multiple process varian
 | resource | Person or role involved |
 | event_cost | Estimated labor or handling cost |
 
+Imported CSV files may use different column names. The mapping step suggests common aliases, requires the three core fields, prevents one source column from being used twice, and previews the source before analysis.
+
 ## Initial questions
 
 - Where does fulfillment spend the most time waiting?

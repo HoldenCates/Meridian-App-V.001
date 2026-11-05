@@ -3,19 +3,20 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="theme-color" content="#102a46">
-  <title>Meridian Process Intelligence</title>
+  <meta name="theme-color" content="#080806">
+  <title>Meridian Operations Console</title>
   <link rel="stylesheet" href="src/styles.css">
+  <link rel="stylesheet" href="src/theme-holden.css">
 </head>
-<body>
+<body data-theme="holden-console">
   <header class="app-header">
     <div class="app-header-inner">
       <div class="brand-lockup">
         <div class="brand-mark" aria-hidden="true">M</div>
         <div>
-          <p class="eyebrow">Meridian Operations</p>
-          <h1>Process Intelligence</h1>
-          <p class="subtitle">Order fulfillment efficiency workspace</p>
+          <div class="eyebrow-row"><p class="eyebrow">Meridian // Private System</p><span class="build-badge">Personal build</span></div>
+          <h1>Operations Console</h1>
+          <p class="subtitle">Process intelligence // order fulfillment</p>
         </div>
       </div>
       <div class="dataset-summary" aria-live="polite">
@@ -49,7 +50,7 @@
     </section>
 
     <section id="panel-overview" class="tab-panel" role="tabpanel" aria-labelledby="tab-overview" data-tab-panel="overview" tabindex="0">
-      <div class="page-heading"><div><h2>Overview</h2><p>Current fulfillment health, priority delays, and improvement signals.</p></div></div>
+      <div class="page-heading" data-console-label="SYS // OVERVIEW"><div><h2>Overview</h2><p>Current fulfillment health, priority delays, and improvement signals.</p></div></div>
       <div id="dataset-notice" class="notice"><strong>Demonstration dataset.</strong> These results show how Meridian works and are not claims about real operations.</div>
       <section class="metric-grid" id="metrics" aria-label="Key performance indicators"></section>
       <section class="layout">
@@ -59,7 +60,7 @@
     </section>
 
     <section id="panel-process" class="tab-panel" role="tabpanel" aria-labelledby="tab-process" data-tab-panel="process" tabindex="0" hidden>
-      <div class="page-heading"><div><h2>Process</h2><p>Compare the paths orders followed and where time accumulated.</p></div></div>
+      <div class="page-heading" data-console-label="NET // PROCESS MAP"><div><h2>Process</h2><p>Compare the paths orders followed and where time accumulated.</p></div></div>
       <section class="card process-toolbar">
         <div><strong>Map overlay</strong><p id="process-legend" class="muted">Edge width shows transition frequency.</p></div>
         <div class="segmented-control" aria-label="Process map overlay">
@@ -86,7 +87,7 @@
     </section>
 
     <section id="panel-opportunities" class="tab-panel" role="tabpanel" aria-labelledby="tab-opportunities" data-tab-panel="opportunities" tabindex="0" hidden>
-      <div class="page-heading"><div><h2>Opportunities</h2><p>Prioritize improvement work using transparent operational and financial assumptions.</p></div></div>
+      <div class="page-heading" data-console-label="SIGNAL // OPPORTUNITIES"><div><h2>Opportunities</h2><p>Prioritize improvement work using transparent operational and financial assumptions.</p></div></div>
       <section class="review-grid">
         <div class="card"><h2>Decision questions</h2><ol class="questions"><li>Which handoff should we improve first?</li><li>Which orders and paths prove the issue?</li><li>How much time and modeled value could be recovered?</li><li>Which assumptions should Meridian approve?</li></ol></div>
         <div class="card"><h2>Opportunity assumptions</h2><p class="muted">Planning assumptions, not accounting results.</p><div class="assumptions"><div class="filter"><label for="wait-target">Maximum handoff wait (hours)</label><input id="wait-target" type="number" min="0" step="0.5" value="2"></div><div class="filter"><label for="hour-value">Value per recovered fulfillment hour ($)</label><input id="hour-value" type="number" min="0" step="5" value="35"></div></div><p class="muted">Modeled capacity value equals hours above target multiplied by hourly value. Rework uses duplicate event cost. Opportunities may overlap and should not be added together.</p></div>
@@ -95,7 +96,7 @@
     </section>
 
     <section id="panel-cases" class="tab-panel" role="tabpanel" aria-labelledby="tab-cases" data-tab-panel="cases" tabindex="0" hidden>
-      <div class="page-heading"><div><h2>Cases</h2><p>Inspect the order-level evidence behind every metric and finding.</p></div></div>
+      <div class="page-heading" data-console-label="TRACE // CASE EVIDENCE"><div><h2>Cases</h2><p>Inspect the order-level evidence behind every metric and finding.</p></div></div>
       <section class="order-layout">
         <div class="card"><div class="card-heading"><div><h2>Orders</h2><p class="muted">Search, sort, and select an order.</p></div></div><div class="case-controls"><div class="filter"><label for="case-search">Search order ID</label><input id="case-search" type="search" placeholder="Example: ORD-014"></div><div class="filter"><label for="case-sort">Sort orders</label><select id="case-sort"><option value="order">Order ID</option><option value="cycle-desc">Longest cycle first</option><option value="status">Attention needed first</option></select></div></div><div id="case-result-count" class="muted case-result-count" aria-live="polite"></div><div id="orders" class="order-list"></div></div>
         <div class="card"><div class="card-heading"><div><h2>Order timeline</h2><p class="muted">Ordered source events with department and resource context.</p></div></div><div id="timeline" class="timeline"></div></div>
@@ -103,7 +104,7 @@
     </section>
 
     <section id="panel-data" class="tab-panel" role="tabpanel" aria-labelledby="tab-data" data-tab-panel="data" tabindex="0" hidden>
-      <div class="page-heading"><div><h2>Data</h2><p>Load, map, preview, and validate an event log before analysis.</p></div></div>
+      <div class="page-heading" data-console-label="INPUT // DATA LINK"><div><h2>Data</h2><p>Load, map, preview, and validate an event log before analysis.</p></div></div>
       <section id="data-summary" class="card data-summary" aria-live="polite"></section>
       <section class="card">
         <div class="import-row"><div><h2>Load an event log</h2><p class="muted">Upload a CSV or Excel workbook using your existing column names.</p></div><label class="upload-button">Choose file<input id="csv-file" type="file" accept=".csv,.xlsx,.xls,.xlsb,text/csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel"></label></div>
@@ -119,7 +120,7 @@
       </section>
     </section>
 
-    <footer class="app-footer">Meridian App V.002 · Evidence-backed process improvement</footer>
+    <footer class="app-footer">PERSONAL BUILD // MERIDIAN APP V.002 // EVIDENCE-BACKED PROCESS IMPROVEMENT</footer>
   </main>
 
   <script src="vendor/xlsx.full.min.js"></script>

@@ -3,14 +3,15 @@
   let observedContainer = null;
 
   const escapeHtml = value => String(value).replace(/[&<>'"]/g, character => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", "'": "&#39;", '"': "&quot;" }[character]));
+  const themeColor = (token, fallback) => root.getComputedStyle?.(root.document.documentElement).getPropertyValue(token).trim() || fallback;
   const edgeMetric = (edge, overlay) => overlay === "duration" ? edge.avgHours : overlay === "cost" ? edge.totalCost : edge.occurrences;
   const edgeDisplay = (edge, overlay) => overlay === "duration" ? `${edge.avgHours.toFixed(1)}h` : overlay === "cost" ? `$${edge.totalCost.toFixed(0)}` : `${edge.occurrences}`;
 
   function edgeColor(value, maximum, overlay) {
-    if (overlay === "frequency") return "#b88912";
+    if (overlay === "frequency") return themeColor("--chart-frequency", "#b88912");
     const ratio = maximum ? value / maximum : 0;
-    if (overlay === "duration") return ratio > 0.65 ? "#b42318" : ratio > 0.35 ? "#d58a0b" : "#c9a227";
-    return ratio > 0.65 ? "#6f5200" : ratio > 0.35 ? "#a77d09" : "#d4af37";
+    if (overlay === "duration") return ratio > 0.65 ? themeColor("--chart-duration-high", "#b42318") : ratio > 0.35 ? themeColor("--chart-duration-mid", "#d58a0b") : themeColor("--chart-duration-low", "#c9a227");
+    return ratio > 0.65 ? themeColor("--chart-cost-high", "#6f5200") : ratio > 0.35 ? themeColor("--chart-cost-mid", "#a77d09") : themeColor("--chart-cost-low", "#d4af37");
   }
 
   function render(container, graph, overlay, onSelect) {
@@ -30,8 +31,8 @@
       value: node.cases,
       symbol: "circle",
       symbolSize: 50 + 18 * (node.cases / maximumCases),
-      itemStyle: { color: node.reworkOccurrences ? "#fff2c2" : "#fffdf5", borderColor: node.reworkOccurrences ? "#b26b00" : "#b88912", borderWidth: 2 },
-      label: { color: "#16140f", fontSize: 10, fontWeight: 700, width: 100, overflow: "break", position: "bottom", distance: 8 }
+      itemStyle: { color: node.reworkOccurrences ? themeColor("--chart-node-rework", "#fff2c2") : themeColor("--chart-node", "#fffdf5"), borderColor: node.reworkOccurrences ? themeColor("--chart-node-rework-border", "#b26b00") : themeColor("--chart-node-border", "#b88912"), borderWidth: 2 },
+      label: { color: themeColor("--chart-label", "#16140f"), fontSize: 10, fontWeight: 700, width: 100, overflow: "break", position: "bottom", distance: 8 }
     }));
     const links = graph.edges.map(edge => {
       const value = edgeMetric(edge, overlay);
@@ -69,9 +70,9 @@
         edgeSymbol: ["none", "arrow"],
         edgeSymbolSize: 8,
         label: { show: true },
-        edgeLabel: { show: true, formatter: params => params.data.displayValue, color: "#403c32", fontFamily: "IBM Plex Mono", fontSize: 10, backgroundColor: "rgba(255,255,255,.9)", padding: [2, 4], borderRadius: 3 },
+        edgeLabel: { show: true, formatter: params => params.data.displayValue, color: themeColor("--chart-edge-label", "#403c32"), fontFamily: "IBM Plex Mono", fontSize: 10, backgroundColor: themeColor("--chart-edge-label-bg", "rgba(255,255,255,.9)"), padding: [2, 4], borderRadius: 3 },
         emphasis: { focus: "adjacency", lineStyle: { opacity: 1 } },
-        select: { itemStyle: { borderColor: "#101828", borderWidth: 3 }, lineStyle: { opacity: 1 } }
+        select: { itemStyle: { borderColor: themeColor("--chart-selection", "#101828"), borderWidth: 3 }, lineStyle: { opacity: 1 } }
       }]
     }, true);
     chart.off("click");

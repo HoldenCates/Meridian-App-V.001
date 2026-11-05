@@ -53,6 +53,8 @@ Process visualization is powered by the locally vendored Apache ECharts 6.1.0 Ca
 
 The interface uses a black-and-gold Meridian palette, Geist Pixel Square for primary navigation, and IBM Plex Mono for order IDs, prices, metrics, and operational values. Font files are stored locally under `vendor/fonts` so the app remains portable and offline-ready.
 
+This repository currently uses the personal `holden-console` theme in `src/theme-holden.css`. Shared layout and analysis behavior remain separate so customer distributions can receive their own colors, typography, identity, and visual treatment. See `docs/THEMING.md` for the customization contract.
+
 ## Verify the calculations
 
 With Node.js installed, run `node tests/run-all.js`. The tests cover CSV and Excel import, mapping, validation, cycle-time status, rework, filtering, totals, process variants, and opportunity calculations.

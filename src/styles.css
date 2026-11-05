@@ -31,6 +31,21 @@
   --shadow-md:0 8px 24px rgba(16,24,40,.07);
   --font-nav:"Geist Pixel Square","Segoe UI",sans-serif;
   --font-mono:"IBM Plex Mono","Cascadia Mono",Consolas,monospace;
+  --chart-frequency:#b88912;
+  --chart-duration-high:#b42318;
+  --chart-duration-mid:#d58a0b;
+  --chart-duration-low:#c9a227;
+  --chart-cost-high:#6f5200;
+  --chart-cost-mid:#a77d09;
+  --chart-cost-low:#d4af37;
+  --chart-node:#fffdf5;
+  --chart-node-rework:#fff2c2;
+  --chart-node-border:#b88912;
+  --chart-node-rework-border:#b26b00;
+  --chart-label:#16140f;
+  --chart-edge-label:#403c32;
+  --chart-edge-label-bg:rgba(255,255,255,.9);
+  --chart-selection:#101828;
 }
 
 * { box-sizing:border-box; }

@@ -18,5 +18,7 @@ assert.match(html, /vendor\/echarts\.min\.js/);
 assert.match(html, /src\/process-view\.js/);
 assert.match(processSource, /aria:\s*\{\s*enabled:\s*true/);
 assert.match(processSource, /renderer:\s*"canvas"/);
+assert.match(processSource, /getPropertyValue\(token\)/);
+assert.match(processSource, /--chart-frequency/);
 
 console.log("Process view checks passed.");

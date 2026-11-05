@@ -59,4 +59,4 @@ This repository currently uses the personal `holden-console` theme in `src/theme
 
 ## Verify the calculations
 
-With Node.js installed, run `node tests/run-all.js`. The tests cover CSV and Excel import, mapping, validation, cycle-time status, rework, filtering, totals, process variants, and opportunity calculations.
+With Node.js installed, run `node tests/run-all.js`. The tests cover CSV and Excel import, mapping, validation, cycle-time status, rework, filtering, totals, process variants, opportunity calculations, realistic bottleneck simulations, incomplete data, and a 5,000-order scale run. See `docs/SIMULATION-REPORT.md` for the latest simulation findings.

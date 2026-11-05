@@ -1,4 +1,4 @@
-const { importFields, parseCsv, suggestMappings, mapEvents, validateMapping, validateEvents, analyzeEvents, filterOrders, summarizeOrders, buildVariants, rankOpportunities } = window.MeridianAnalysis;
+const { importFields, parseCsv, suggestMappings, mapEvents, validateMapping, validateEvents, analyzeEvents, filterOrders, summarizeOrders, buildVariants, buildProcessGraph, rankOpportunities } = window.MeridianAnalysis;
 const { parseWorkbook } = window.MeridianWorkbookImport;
 const { syntheticEvents } = window.MeridianSampleData;
 const escapeHtml = value => String(value).replace(/[&<>'"]/g, character => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", "'": "&#39;", '"': "&quot;" }[character]));
@@ -6,6 +6,10 @@ let currentOrders = analyzeEvents(syntheticEvents);
 let currentSource = "synthetic pilot data";
 let pendingImport = null;
 let pendingWorkbook = null;
+let activeAnalysisOrders = [];
+let currentProcessGraph = { nodes: [], edges: [], dominantPath: [], variants: [], orders: 0 };
+let currentProcessOverlay = "frequency";
+let selectedProcessElement = null;
 const fieldLabels = { order_id: "Order identifier", activity: "Activity / process step", timestamp: "Event timestamp", department: "Department", resource: "Employee / resource", event_cost: "Event cost" };
 
 function showQuality(result, source) {
@@ -83,6 +87,57 @@ function getFilters() {
   return { department: document.querySelector("#department-filter").value, status: document.querySelector("#status-filter").value, from: document.querySelector("#from-filter").value, to: document.querySelector("#to-filter").value };
 }
 
+function renderOrderTimeline(orderId) {
+  const order = activeAnalysisOrders.find(item => item.order_id === orderId);
+  document.querySelector("#timeline").innerHTML = order ? `<h3>${escapeHtml(order.order_id)} timeline</h3>${order.events.map(event => `<div class="event"><div class="event-time">${new Date(event.timestamp).toLocaleString()}</div><div><strong>${escapeHtml(event.activity)}</strong><br><small>${escapeHtml(event.department || "Unassigned")} · ${escapeHtml(event.resource || "Unassigned")}</small></div></div>`).join("")}` : `<p class="muted">Select an order to inspect its source events.</p>`;
+}
+
+function openOrderEvidence(orderId) {
+  window.MeridianUI.activateTab("cases");
+  renderOrderTimeline(orderId);
+}
+
+function renderProcessDetail(type, item, selectOnChart = false) {
+  selectedProcessElement = item ? { type, id: item.id } : null;
+  const detail = document.querySelector("#process-detail");
+  if (!item) {
+    detail.innerHTML = `<h2>Process evidence</h2><p class="muted">Select an activity or transition to inspect the supporting orders.</p>`;
+    return;
+  }
+  const isEdge = type === "edge";
+  const title = isEdge ? `${item.source} → ${item.target}` : item.name;
+  const metrics = isEdge ? [
+    ["Orders", item.cases], ["Transitions", item.occurrences], ["Average wait", `${item.avgHours.toFixed(1)} hrs`], ["Event cost", `$${item.totalCost.toFixed(2)}`]
+  ] : [
+    ["Orders", item.cases], ["Events", item.occurrences], ["Repeated", item.reworkOccurrences], ["Event cost", `$${item.totalCost.toFixed(2)}`]
+  ];
+  detail.innerHTML = `<div class="process-detail-kicker">${isEdge ? "Transition" : "Activity"}</div><h2>${escapeHtml(title)}</h2><p class="muted">${isEdge ? "Waiting time is measured between consecutive event timestamps." : "Counts reflect the currently filtered orders."}</p><div class="detail-metrics">${metrics.map(([label, value]) => `<div class="detail-metric"><span>${label}</span><strong>${value}</strong></div>`).join("")}</div><strong style="font-size:12px">Supporting orders</strong><div class="evidence-list">${item.caseIds.map(orderId => `<button type="button" data-process-order="${escapeHtml(orderId)}">${escapeHtml(orderId)}</button>`).join("")}</div><p class="muted">Select an order to open its complete event timeline.</p>`;
+  document.querySelectorAll("[data-process-order]").forEach(button => button.addEventListener("click", () => openOrderEvidence(button.dataset.processOrder)));
+  if (selectOnChart) window.MeridianProcessView.select(type, item.id, currentProcessGraph);
+}
+
+function renderProcessChart() {
+  window.MeridianProcessView.render(document.querySelector("#process-chart"), currentProcessGraph, currentProcessOverlay, (type, item) => renderProcessDetail(type, item));
+}
+
+function updateProcessView(orders) {
+  currentProcessGraph = buildProcessGraph(orders);
+  const overlayLabels = { frequency: "Edge width shows transition frequency.", duration: "Edge width and color show average waiting time.", cost: "Edge width and color show total target-event cost." };
+  document.querySelector("#process-legend").textContent = overlayLabels[currentProcessOverlay];
+  document.querySelectorAll("[data-process-overlay]").forEach(button => button.setAttribute("aria-pressed", String(button.dataset.processOverlay === currentProcessOverlay)));
+  const metric = edge => currentProcessOverlay === "duration" ? edge.avgHours : currentProcessOverlay === "cost" ? edge.totalCost : edge.occurrences;
+  const sortedEdges = [...currentProcessGraph.edges].sort((left, right) => metric(right) - metric(left));
+  document.querySelector("#process-transitions").innerHTML = sortedEdges.length ? sortedEdges.map(edge => `<tr><td>${escapeHtml(edge.source)} → ${escapeHtml(edge.target)}</td><td>${edge.cases}</td><td>${edge.occurrences}</td><td>${edge.avgHours.toFixed(1)} hrs</td><td>$${edge.totalCost.toFixed(2)}</td><td><button class="transition-button" type="button" data-transition-id="${escapeHtml(edge.id)}">Inspect</button></td></tr>`).join("") : `<tr><td colspan="6" class="muted">No transitions match the active filters.</td></tr>`;
+  document.querySelectorAll("[data-transition-id]").forEach(button => button.addEventListener("click", () => {
+    const edge = currentProcessGraph.edges.find(item => item.id === button.dataset.transitionId);
+    renderProcessDetail("edge", edge, true);
+  }));
+  const existing = selectedProcessElement?.type === "edge" ? currentProcessGraph.edges.find(item => item.id === selectedProcessElement.id) : currentProcessGraph.nodes.find(item => item.id === selectedProcessElement?.id);
+  const defaultItem = existing || sortedEdges[0] || currentProcessGraph.nodes[0];
+  renderProcessDetail(existing ? selectedProcessElement.type : sortedEdges[0] ? "edge" : "node", defaultItem);
+  if (!document.querySelector("#panel-process").hidden) renderProcessChart();
+}
+
 function render() {
   const filteredOrders = filterOrders(currentOrders, getFilters());
   const analysis = summarizeOrders(filteredOrders);
@@ -99,18 +154,13 @@ function render() {
     `<div class="finding"><strong>Rework detected in ${analysis.orders.filter(order => order.rework).map(order => order.order_id).join(", ") || "none"}</strong><span>Repeated activities increase handling effort and should be investigated.</span><br><small>Confidence: based on ${escapeHtml(currentSource)}.</small></div>`,
     `<div class="finding"><strong>${analysis.orders.filter(order => order.late).length} late shipments</strong><span>Orders exceeding the 24-hour pilot fulfillment target.</span><br><small>Estimated event cost in selection: $${analysis.totalCost.toFixed(2)}.</small></div>`
   ].join("") : `<p class="muted">No orders match the selected filters.</p>`;
+  activeAnalysisOrders = analysis.orders;
   document.querySelector("#orders").innerHTML = analysis.orders.map(order => `<button data-order="${escapeHtml(order.order_id)}">${escapeHtml(order.order_id)} <span class="pill ${order.late ? "bad" : order.rework ? "warn" : "good"}">${order.late ? "Late" : order.rework ? "Rework" : "On track"}</span></button>`).join(" ");
-  const renderTimeline = orderId => {
-    const order = analysis.orders.find(item => item.order_id === orderId);
-    document.querySelector("#timeline").innerHTML = order ? `<h3>${escapeHtml(order.order_id)} timeline</h3>${order.events.map(event => `<div class="event"><div class="event-time">${new Date(event.timestamp).toLocaleString()}</div><div><strong>${escapeHtml(event.activity)}</strong><br><small>${escapeHtml(event.department || "Unassigned")} · ${escapeHtml(event.resource || "Unassigned")}</small></div></div>`).join("")}` : "";
-  };
-  document.querySelectorAll("[data-order]").forEach(button => button.addEventListener("click", () => renderTimeline(button.dataset.order)));
-  renderTimeline(analysis.orders[0]?.order_id);
+  document.querySelectorAll("[data-order]").forEach(button => button.addEventListener("click", () => renderOrderTimeline(button.dataset.order)));
+  renderOrderTimeline(analysis.orders[0]?.order_id);
   const variants = buildVariants(filteredOrders);
   document.querySelector("#variants").innerHTML = variants.length ? variants.map((variant, index) => `<tr><td>${index + 1}</td><td class="variant-path">${escapeHtml(variant.path)}</td><td>${variant.count}</td><td>${variant.avgCycle.toFixed(1)} hrs</td><td>${variant.late}</td><td>${variant.rework}</td></tr>`).join("") : `<tr><td colspan="6" class="muted">No process variants match the selected filters.</td></tr>`;
-  const primaryVariant = variants[0];
-  document.querySelector("#process-preview-count").textContent = primaryVariant ? `${primaryVariant.count} orders` : "No orders";
-  document.querySelector("#process-preview").innerHTML = primaryVariant ? primaryVariant.path.split(" → ").map((activity, index, path) => `<div class="process-node">${escapeHtml(activity)}</div>${index < path.length - 1 ? '<span class="process-arrow" aria-hidden="true">›</span>' : ""}`).join("") : `<p class="muted">No process path matches the selected filters.</p>`;
+  updateProcessView(filteredOrders);
   const assumptions = { waitTargetHours: document.querySelector("#wait-target").value, valuePerHour: document.querySelector("#hour-value").value };
   const opportunities = rankOpportunities(filteredOrders, assumptions).slice(0, 5);
   document.querySelector("#opportunities").innerHTML = opportunities.length ? opportunities.map((opportunity, index) => `<article class="opportunity"><div class="opportunity-rank">${index + 1}</div><div><div class="opportunity-heading"><strong>${escapeHtml(opportunity.title)}</strong><span class="pill ${opportunity.confidence === "Strong" ? "good" : "warn"}">${opportunity.confidence} evidence</span></div><p>${escapeHtml(opportunity.evidence)}</p><div class="opportunity-impact"><span><b>${opportunity.affectedOrders}</b> affected orders</span><span><b>${opportunity.recoverableHours.toFixed(1)}</b> recoverable hours</span><span><b>$${opportunity.estimatedValue.toFixed(2)}</b> ${escapeHtml(opportunity.valueLabel.toLowerCase())}</span></div></div></article>`).join("") : `<p class="muted">No opportunities exceed the current assumptions.</p>`;
@@ -139,6 +189,12 @@ document.querySelector("#csv-file").addEventListener("change", event => {
 
 document.querySelector("#apply-mapping").addEventListener("click", applyMapping);
 document.querySelector("#sheet-select").addEventListener("change", event => loadWorkbookSheet(event.target.value));
+
+document.querySelectorAll("[data-process-overlay]").forEach(button => button.addEventListener("click", () => {
+  currentProcessOverlay = button.dataset.processOverlay;
+  updateProcessView(activeAnalysisOrders);
+}));
+window.addEventListener("meridian:tabchange", event => { if (event.detail.name === "process") renderProcessChart(); });
 
 document.querySelectorAll("#department-filter, #status-filter, #from-filter, #to-filter").forEach(control => control.addEventListener("change", render));
 document.querySelectorAll("#wait-target, #hour-value").forEach(control => control.addEventListener("input", render));

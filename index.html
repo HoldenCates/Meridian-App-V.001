@@ -60,9 +60,24 @@
 
     <section id="panel-process" class="tab-panel" role="tabpanel" aria-labelledby="tab-process" data-tab-panel="process" tabindex="0" hidden>
       <div class="page-heading"><div><h2>Process</h2><p>Compare the paths orders followed and where time accumulated.</p></div></div>
-      <section class="card">
-        <div class="card-heading"><div><h2>Most common path</h2><p class="muted">A lightweight preview before the interactive V.002 process map is added.</p></div><span id="process-preview-count" class="pill good"></span></div>
-        <div id="process-preview" class="process-preview"></div>
+      <section class="card process-toolbar">
+        <div><strong>Map overlay</strong><p id="process-legend" class="muted">Edge width shows transition frequency.</p></div>
+        <div class="segmented-control" aria-label="Process map overlay">
+          <button type="button" data-process-overlay="frequency" aria-pressed="true">Frequency</button>
+          <button type="button" data-process-overlay="duration" aria-pressed="false">Average wait</button>
+          <button type="button" data-process-overlay="cost" aria-pressed="false">Cost</button>
+        </div>
+      </section>
+      <section class="process-layout section-gap">
+        <div class="card process-map-card">
+          <div class="card-heading"><div><h2>Discovered process map</h2><p class="muted">Select an activity or transition. Drag to pan and scroll to zoom.</p></div></div>
+          <div id="process-chart" class="process-chart" role="img" aria-label="Interactive order fulfillment process map"></div>
+        </div>
+        <aside id="process-detail" class="card process-detail" aria-live="polite"></aside>
+      </section>
+      <section class="card table-card section-gap">
+        <div class="card-heading"><div><h2>Transition performance</h2><p class="muted">Keyboard-accessible evidence for every connection in the map.</p></div></div>
+        <div class="table-scroll"><table><thead><tr><th>Transition</th><th>Orders</th><th>Events</th><th>Avg. wait</th><th>Event cost</th><th></th></tr></thead><tbody id="process-transitions"></tbody></table></div>
       </section>
       <section class="card table-card section-gap">
         <div class="card-heading"><div><h2>Process variants</h2><p class="muted">Repeated steps expose rework and alternate paths.</p></div></div>
@@ -106,10 +121,12 @@
   </main>
 
   <script src="vendor/xlsx.full.min.js"></script>
+  <script src="vendor/echarts.min.js"></script>
   <script src="src/analysis.js"></script>
   <script src="src/workbook-import.js"></script>
   <script src="src/sample-data.js"></script>
   <script src="src/ui.js"></script>
+  <script src="src/process-view.js"></script>
   <script src="src/app.js"></script>
 </body>
 </html>

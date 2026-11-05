@@ -1,5 +1,5 @@
 const assert = require("node:assert/strict");
-const { parseCsv, suggestMappings, mapEvents, validateMapping, validateEvents, analyzeEvents, filterOrders, summarizeOrders, buildVariants, rankOpportunities } = require("../src/analysis.js");
+const { parseCsv, suggestMappings, mapEvents, validateMapping, validateEvents, analyzeEvents, filterOrders, summarizeOrders, buildVariants, buildProcessGraph, rankOpportunities } = require("../src/analysis.js");
 const { syntheticEvents } = require("../src/sample-data.js");
 
 const csv = `order_id,activity,timestamp,department,event_cost
@@ -57,6 +57,15 @@ assert.ok(pilotOrders.filter(order => order.late).length >= 5);
 assert.ok(pilotOrders.filter(order => order.rework).length >= 5);
 assert.ok(buildVariants(pilotOrders).length >= 3);
 assert.ok(rankOpportunities(pilotOrders, { waitTargetHours: 2, valuePerHour: 35 }).length >= 2);
+const processGraph = buildProcessGraph(pilotOrders);
+assert.equal(processGraph.nodes.length, 7);
+assert.ok(processGraph.edges.length >= 8);
+assert.equal(processGraph.dominantPath.length, 7);
+const shippingEdge = processGraph.edges.find(edge => edge.source === "Shipment created" && edge.target === "Order shipped");
+assert.equal(shippingEdge.occurrences, 24);
+assert.equal(shippingEdge.avgHours, 10.125);
+assert.equal(shippingEdge.totalCost, 60);
+assert.equal(processGraph.nodes.find(node => node.name === "Order shipped").cases, 24);
 
 const invalid = validateEvents([{ order_id: "A", activity: "Received", timestamp: "not-a-date" }], ["order_id", "activity", "timestamp"]);
 assert.equal(invalid.invalidTimestamps, 1);

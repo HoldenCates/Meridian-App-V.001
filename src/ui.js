@@ -15,6 +15,7 @@
     panels.forEach(panel => { panel.hidden = panel.dataset.tabPanel !== targetName; });
     analysisContext.hidden = targetName === "data";
     if (options.updateHash !== false && location.hash !== `#${targetName}`) history.replaceState(null, "", `#${targetName}`);
+    root.dispatchEvent(new CustomEvent("meridian:tabchange", { detail: { name: targetName } }));
   }
 
   tabs.forEach((tab, index) => {

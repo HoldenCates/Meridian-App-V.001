@@ -100,7 +100,8 @@
         order_id,
         from: sorted[index].activity,
         to: event.activity,
-        hours: hoursBetween(sorted[index].timestamp, event.timestamp)
+        hours: hoursBetween(sorted[index].timestamp, event.timestamp),
+        cost: Number(event.event_cost) || 0
       }));
       const activityNames = sorted.map(event => event.activity);
       const cycle = sorted.length > 1 ? hoursBetween(sorted[0].timestamp, sorted.at(-1).timestamp) : 0;
@@ -167,6 +168,51 @@
     })).sort((left, right) => right.count - left.count || left.avgCycle - right.avgCycle);
   }
 
+  function buildProcessGraph(orders) {
+    const nodeMap = {};
+    const edgeMap = {};
+    orders.forEach(order => {
+      const seenActivities = new Set();
+      order.events.forEach(event => {
+        const node = nodeMap[event.activity] ??= { id: event.activity, name: event.activity, caseIds: new Set(), occurrences: 0, reworkOccurrences: 0, totalCost: 0 };
+        node.caseIds.add(order.order_id);
+        node.occurrences += 1;
+        node.totalCost += Number(event.event_cost) || 0;
+        if (seenActivities.has(event.activity)) node.reworkOccurrences += 1;
+        seenActivities.add(event.activity);
+      });
+      order.waits.forEach(wait => {
+        const id = `${wait.from}|||${wait.to}`;
+        const edge = edgeMap[id] ??= { id, source: wait.from, target: wait.to, caseIds: new Set(), occurrences: 0, totalHours: 0, totalCost: 0 };
+        edge.caseIds.add(order.order_id);
+        edge.occurrences += 1;
+        edge.totalHours += wait.hours;
+        edge.totalCost += wait.cost;
+      });
+    });
+    const variants = buildVariants(orders);
+    const dominantPath = variants[0]?.path.split(" → ") || [];
+    const activityOrder = [...new Set([...dominantPath, ...Object.keys(nodeMap).sort()])];
+    const nodes = activityOrder.map((id, index) => {
+      const node = nodeMap[id];
+      return {
+        ...node,
+        caseIds: [...node.caseIds].sort(),
+        cases: node.caseIds.size,
+        avgCost: node.totalCost / (node.occurrences || 1),
+        order: index
+      };
+    });
+    const edges = Object.values(edgeMap).map(edge => ({
+      ...edge,
+      caseIds: [...edge.caseIds].sort(),
+      cases: edge.caseIds.size,
+      avgHours: edge.totalHours / (edge.occurrences || 1),
+      avgCost: edge.totalCost / (edge.occurrences || 1)
+    })).sort((left, right) => right.occurrences - left.occurrences || right.avgHours - left.avgHours);
+    return { nodes, edges, dominantPath, variants, orders: orders.length };
+  }
+
   function rankOpportunities(orders, assumptions = {}) {
     const waitTargetHours = Math.max(0, Number(assumptions.waitTargetHours) || 0);
     const valuePerHour = Math.max(0, Number(assumptions.valuePerHour) || 0);
@@ -208,7 +254,7 @@
       .sort((left, right) => right.estimatedValue - left.estimatedValue || right.affectedOrders - left.affectedOrders);
   }
 
-  const api = { requiredColumns, importFields, parseCsv, parseTabularRows, suggestMappings, mapEvents, validateMapping, validateEvents, analyzeEvents, filterOrders, summarizeOrders, buildVariants, rankOpportunities };
+  const api = { requiredColumns, importFields, parseCsv, parseTabularRows, suggestMappings, mapEvents, validateMapping, validateEvents, analyzeEvents, filterOrders, summarizeOrders, buildVariants, buildProcessGraph, rankOpportunities };
   root.MeridianAnalysis = api;
   if (typeof module !== "undefined" && module.exports) module.exports = api;
 })(typeof window !== "undefined" ? window : globalThis);

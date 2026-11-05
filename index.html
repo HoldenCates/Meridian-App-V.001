@@ -3,113 +3,113 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Meridian App V.001</title>
-  <style>
-    :root { --navy:#10243e; --blue:#1f6feb; --ink:#142033; --muted:#64748b; --line:#dbe4ef; --bg:#f5f7fb; --card:#fff; --warn:#b45309; --bad:#b42318; --good:#147d4d; }
-    * { box-sizing:border-box; }
-    body { margin:0; font-family:Inter,Segoe UI,Arial,sans-serif; color:var(--ink); background:var(--bg); }
-    header { background:linear-gradient(135deg,var(--navy),#1c497b); color:white; padding:28px 34px; }
-    header h1 { margin:0 0 6px; font-size:28px; }
-    header p { margin:0; opacity:.82; }
-    main { max-width:1180px; margin:0 auto; padding:24px 22px 48px; }
-    .notice { background:#eef5ff; border:1px solid #c9ddfb; padding:12px 15px; border-radius:10px; margin-bottom:20px; color:#174a83; }
-    .import-card { margin-bottom:20px; }
-    .import-row { display:flex; align-items:center; justify-content:space-between; gap:18px; }
-    .muted { color:var(--muted); font-size:13px; margin:0; }
-    .upload-button { display:inline-block; background:var(--blue); color:#fff; padding:9px 13px; border-radius:7px; cursor:pointer; white-space:nowrap; }
-    .upload-button input { display:none; }
-    .primary-button { background:var(--blue); border-color:var(--blue); color:white; }
-    .primary-button:hover { background:#1757b8; color:white; }
-    .quality { margin-top:16px; border-top:1px solid var(--line); padding-top:14px; }
-    .quality.good { color:var(--good); } .quality.warn { color:var(--warn); }
-    .quality ul { margin:8px 0 0; padding-left:20px; color:var(--ink); font-size:13px; }
-    .hidden { display:none; }
-    .filters { display:grid; grid-template-columns:repeat(4,minmax(130px,1fr)) auto; gap:12px; align-items:end; margin-bottom:20px; }
-    .filter label { display:block; color:var(--muted); font-size:12px; margin-bottom:5px; }
-    .filter select,.filter input { width:100%; border:1px solid #b8c7d9; border-radius:7px; padding:8px; background:white; color:var(--ink); }
-    .filter-summary { grid-column:1/-1; }
-    .mapping-card { margin-bottom:20px; }
-    .mapping-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:12px; margin:14px 0; }
-    .preview-wrap { overflow:auto; max-height:250px; border:1px solid var(--line); border-radius:8px; margin:14px 0; }
-    .preview-wrap table { min-width:760px; }
-    .grid { display:grid; grid-template-columns:repeat(5,minmax(0,1fr)); gap:12px; margin-bottom:20px; }
-    .card { background:var(--card); border:1px solid var(--line); border-radius:12px; padding:16px; box-shadow:0 2px 8px #12233d0a; }
-    .metric-label { color:var(--muted); font-size:12px; text-transform:uppercase; letter-spacing:.05em; }
-    .metric-value { font-size:25px; font-weight:700; margin-top:8px; }
-    .layout { display:grid; grid-template-columns:1.1fr .9fr; gap:18px; }
-    h2 { margin:0 0 14px; font-size:18px; }
-    .finding { border-left:4px solid var(--blue); padding:12px 14px; background:#f8fbff; margin:10px 0; border-radius:6px; }
-    .finding strong { display:block; margin-bottom:4px; }
-    .finding small { color:var(--muted); }
-    table { width:100%; border-collapse:collapse; font-size:13px; }
-    th,td { text-align:left; padding:10px 8px; border-bottom:1px solid var(--line); }
-    th { color:var(--muted); font-weight:600; }
-    .pill { display:inline-block; padding:3px 8px; border-radius:999px; font-size:11px; font-weight:700; }
-    .pill.good { background:#e9f7ef; color:var(--good); } .pill.warn { background:#fff4df; color:var(--warn); } .pill.bad { background:#ffebe8; color:var(--bad); }
-    button { border:1px solid #b8c7d9; background:white; color:var(--ink); padding:8px 11px; border-radius:7px; cursor:pointer; }
-    button:hover { border-color:var(--blue); color:var(--blue); }
-    .timeline { margin-top:12px; padding-top:4px; }
-    .timeline h3 { font-size:15px; margin:14px 0 6px; }
-    .event { display:flex; gap:12px; padding:8px 0; border-bottom:1px solid #edf1f6; }
-    .event-time { width:145px; color:var(--muted); font-size:12px; }
-    footer { color:var(--muted); font-size:12px; margin-top:20px; }
-    .variants-card { margin-top:18px; overflow-x:auto; }
-    .variant-path { min-width:420px; }
-    .review-grid { display:grid; grid-template-columns:.8fr 1.2fr; gap:18px; margin-top:18px; }
-    .questions { margin:0; padding-left:20px; }
-    .questions li { margin:10px 0; }
-    .assumptions { display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-top:14px; }
-    .opportunity { display:grid; grid-template-columns:34px 1fr; gap:12px; padding:14px 0; border-bottom:1px solid var(--line); }
-    .opportunity:last-child { border-bottom:0; }
-    .opportunity-rank { width:30px; height:30px; display:grid; place-items:center; border-radius:50%; background:#e8f1ff; color:var(--blue); font-weight:700; }
-    .opportunity-heading { display:flex; justify-content:space-between; gap:10px; }
-    .opportunity p { color:var(--muted); font-size:13px; margin:6px 0 9px; }
-    .opportunity-impact { display:flex; flex-wrap:wrap; gap:16px; font-size:12px; }
-    @media (max-width:850px) { .grid,.layout { grid-template-columns:1fr 1fr; } .layout { grid-template-columns:1fr; } .filters,.mapping-grid { grid-template-columns:1fr 1fr; } .import-row { align-items:flex-start; flex-direction:column; } }
-    @media (max-width:850px) { .review-grid { grid-template-columns:1fr; } }
-    @media (max-width:560px) { .grid { grid-template-columns:1fr 1fr; } .assumptions { grid-template-columns:1fr; } }
-  </style>
+  <meta name="theme-color" content="#102a46">
+  <title>Meridian Process Intelligence</title>
+  <link rel="stylesheet" href="src/styles.css">
 </head>
 <body>
-  <header><h1>Meridian App V.001</h1><p>Order fulfillment efficiency pilot</p></header>
-  <main>
-    <div class="notice"><strong>Synthetic pilot data.</strong> These findings demonstrate the analysis workflow and are not claims about real Meridian operations.</div>
-    <section class="card import-card">
-      <div class="import-row"><div><h2 style="margin-bottom:4px">Load an event log</h2><p class="muted">Upload a CSV or Excel workbook using your existing column names. Meridian will help map them.</p></div><label class="upload-button">Choose file<input id="csv-file" type="file" accept=".csv,.xlsx,.xls,.xlsb,text/csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel"></label></div>
-      <div id="data-quality" class="quality hidden"></div>
+  <header class="app-header">
+    <div class="app-header-inner">
+      <div class="brand-lockup">
+        <div class="brand-mark" aria-hidden="true">M</div>
+        <div>
+          <p class="eyebrow">Meridian Operations</p>
+          <h1>Process Intelligence</h1>
+          <p class="subtitle">Order fulfillment efficiency workspace</p>
+        </div>
+      </div>
+      <div class="dataset-summary" aria-live="polite">
+        <span class="dataset-label">Active dataset</span>
+        <strong id="dataset-name" class="dataset-name">Synthetic pilot data</strong>
+        <div id="dataset-meta" class="dataset-meta">24 orders · Demonstration data</div>
+      </div>
+    </div>
+  </header>
+
+  <nav class="app-nav" aria-label="Meridian workspace">
+    <div class="tab-list" role="tablist" aria-label="Analysis views">
+      <button id="tab-overview" class="tab-button" role="tab" aria-selected="true" aria-controls="panel-overview" data-tab-target="overview">Overview</button>
+      <button id="tab-process" class="tab-button" role="tab" aria-selected="false" aria-controls="panel-process" data-tab-target="process" tabindex="-1">Process</button>
+      <button id="tab-opportunities" class="tab-button" role="tab" aria-selected="false" aria-controls="panel-opportunities" data-tab-target="opportunities" tabindex="-1">Opportunities</button>
+      <button id="tab-cases" class="tab-button" role="tab" aria-selected="false" aria-controls="panel-cases" data-tab-target="cases" tabindex="-1">Cases</button>
+      <button id="tab-data" class="tab-button" role="tab" aria-selected="false" aria-controls="panel-data" data-tab-target="data" tabindex="-1">Data</button>
+    </div>
+  </nav>
+
+  <main class="app-main">
+    <section id="analysis-context" class="card analysis-context" aria-label="Analysis filters">
+      <div class="context-topline"><h2>Analysis scope</h2><p id="result-count" class="muted"></p></div>
+      <div class="filters">
+        <div class="filter"><label for="department-filter">Department involved</label><select id="department-filter"></select></div>
+        <div class="filter"><label for="status-filter">Order status</label><select id="status-filter"><option value="all">All statuses</option><option value="on-track">On track</option><option value="late">Late</option><option value="rework">Rework</option></select></div>
+        <div class="filter"><label for="from-filter">Started on or after</label><input id="from-filter" type="date"></div>
+        <div class="filter"><label for="to-filter">Started on or before</label><input id="to-filter" type="date"></div>
+        <button id="reset-filters" type="button">Reset filters</button>
+      </div>
     </section>
-    <section id="mapping-panel" class="card mapping-card hidden">
-      <h2>Review column mapping</h2><p class="muted">Confirm what each source column means. Fields marked * are required.</p>
-      <div id="workbook-controls" class="filter hidden" style="max-width:360px;margin-top:14px"><label for="sheet-select">Worksheet to import</label><select id="sheet-select"></select></div>
-      <div id="mapping-fields" class="mapping-grid"></div>
-      <h2>Source preview</h2><div class="preview-wrap"><table id="mapping-preview"></table></div>
-      <button id="apply-mapping" class="primary-button" type="button">Analyze mapped data</button>
+
+    <section id="panel-overview" class="tab-panel" role="tabpanel" aria-labelledby="tab-overview" data-tab-panel="overview" tabindex="0">
+      <div class="page-heading"><div><h2>Overview</h2><p>Current fulfillment health, priority delays, and improvement signals.</p></div></div>
+      <div id="dataset-notice" class="notice"><strong>Demonstration dataset.</strong> These results show how Meridian works and are not claims about real operations.</div>
+      <section class="metric-grid" id="metrics" aria-label="Key performance indicators"></section>
+      <section class="layout">
+        <div class="card"><div class="card-heading"><div><h2>Efficiency findings</h2><p class="muted">Calculated from the active filter scope.</p></div></div><div id="findings"></div></div>
+        <div id="overview-priority" class="card priority-card"></div>
+      </section>
     </section>
-    <section class="card filters" aria-label="Analysis filters">
-      <div class="filter"><label for="department-filter">Department involved</label><select id="department-filter"></select></div>
-      <div class="filter"><label for="status-filter">Order status</label><select id="status-filter"><option value="all">All statuses</option><option value="on-track">On track</option><option value="late">Late</option><option value="rework">Rework</option></select></div>
-      <div class="filter"><label for="from-filter">Started on or after</label><input id="from-filter" type="date"></div>
-      <div class="filter"><label for="to-filter">Started on or before</label><input id="to-filter" type="date"></div>
-      <button id="reset-filters" type="button">Reset</button>
-      <p id="result-count" class="muted filter-summary"></p>
+
+    <section id="panel-process" class="tab-panel" role="tabpanel" aria-labelledby="tab-process" data-tab-panel="process" tabindex="0" hidden>
+      <div class="page-heading"><div><h2>Process</h2><p>Compare the paths orders followed and where time accumulated.</p></div></div>
+      <section class="card">
+        <div class="card-heading"><div><h2>Most common path</h2><p class="muted">A lightweight preview before the interactive V.002 process map is added.</p></div><span id="process-preview-count" class="pill good"></span></div>
+        <div id="process-preview" class="process-preview"></div>
+      </section>
+      <section class="card table-card section-gap">
+        <div class="card-heading"><div><h2>Process variants</h2><p class="muted">Repeated steps expose rework and alternate paths.</p></div></div>
+        <div class="table-scroll"><table><thead><tr><th>#</th><th>Activity path</th><th>Orders</th><th>Avg. cycle</th><th>Late</th><th>Rework</th></tr></thead><tbody id="variants"></tbody></table></div>
+      </section>
     </section>
-    <section class="grid" id="metrics"></section>
-    <section class="layout">
-      <div class="card"><h2>Efficiency findings</h2><div id="findings"></div></div>
-      <div class="card"><h2>Order evidence</h2><p style="color:#64748b;font-size:13px">Select an order to inspect its timeline.</p><div id="orders"></div><div id="timeline" class="timeline"></div></div>
+
+    <section id="panel-opportunities" class="tab-panel" role="tabpanel" aria-labelledby="tab-opportunities" data-tab-panel="opportunities" tabindex="0" hidden>
+      <div class="page-heading"><div><h2>Opportunities</h2><p>Prioritize improvement work using transparent operational and financial assumptions.</p></div></div>
+      <section class="review-grid">
+        <div class="card"><h2>Decision questions</h2><ol class="questions"><li>Which handoff should we improve first?</li><li>Which orders and paths prove the issue?</li><li>How much time and modeled value could be recovered?</li><li>Which assumptions should Meridian approve?</li></ol></div>
+        <div class="card"><h2>Opportunity assumptions</h2><p class="muted">Planning assumptions, not accounting results.</p><div class="assumptions"><div class="filter"><label for="wait-target">Maximum handoff wait (hours)</label><input id="wait-target" type="number" min="0" step="0.5" value="2"></div><div class="filter"><label for="hour-value">Value per recovered fulfillment hour ($)</label><input id="hour-value" type="number" min="0" step="5" value="35"></div></div><p class="muted">Modeled capacity value equals hours above target multiplied by hourly value. Rework uses duplicate event cost. Opportunities may overlap and should not be added together.</p></div>
+      </section>
+      <section class="card section-gap"><div class="card-heading"><div><h2>Ranked improvement opportunities</h2><p class="muted">Recalculates from the active filter scope and assumptions.</p></div></div><div id="opportunities"></div></section>
     </section>
-    <section class="review-grid">
-      <div class="card"><h2>Stakeholder review questions</h2><ol class="questions"><li>Which handoff should we improve first?</li><li>Which orders and process paths prove the issue?</li><li>How much time and modeled value could be recovered?</li><li>What target and financial assumption should Meridian approve?</li></ol><p class="muted">These questions turn the pilot from a dashboard into a decision tool.</p></div>
-      <div class="card"><h2>Opportunity assumptions</h2><p class="muted">Adjust these values during review. They are planning assumptions—not accounting results.</p><div class="assumptions"><div class="filter"><label for="wait-target">Maximum handoff wait (hours)</label><input id="wait-target" type="number" min="0" step="0.5" value="2"></div><div class="filter"><label for="hour-value">Value per recovered fulfillment hour ($)</label><input id="hour-value" type="number" min="0" step="5" value="35"></div></div><p class="muted">Modeled capacity value = hours above the handoff target × value per recovered hour. Rework uses duplicate event cost only. Opportunities can overlap and should not be added together.</p></div>
+
+    <section id="panel-cases" class="tab-panel" role="tabpanel" aria-labelledby="tab-cases" data-tab-panel="cases" tabindex="0" hidden>
+      <div class="page-heading"><div><h2>Cases</h2><p>Inspect the order-level evidence behind every metric and finding.</p></div></div>
+      <section class="order-layout">
+        <div class="card"><div class="card-heading"><div><h2>Orders</h2><p class="muted">Select an order to inspect.</p></div></div><div id="orders" class="order-list"></div></div>
+        <div class="card"><div class="card-heading"><div><h2>Order timeline</h2><p class="muted">Ordered source events with department and resource context.</p></div></div><div id="timeline" class="timeline"></div></div>
+      </section>
     </section>
-    <section class="card variants-card"><h2>Ranked improvement opportunities</h2><p class="muted">Prioritized from the currently filtered orders using the assumptions above.</p><div id="opportunities"></div></section>
-    <section class="card variants-card"><h2>Process variants</h2><p class="muted">Compare the actual paths orders followed. Repeated steps expose rework and alternate paths.</p><table><thead><tr><th>#</th><th>Activity path</th><th>Orders</th><th>Avg. cycle</th><th>Late</th><th>Rework</th></tr></thead><tbody id="variants"></tbody></table></section>
-    <footer>V.001 vertical slice: event log → data-quality report → filters → variants → ranked, evidence-backed opportunities.</footer>
+
+    <section id="panel-data" class="tab-panel" role="tabpanel" aria-labelledby="tab-data" data-tab-panel="data" tabindex="0" hidden>
+      <div class="page-heading"><div><h2>Data</h2><p>Load, map, preview, and validate an event log before analysis.</p></div></div>
+      <section class="card">
+        <div class="import-row"><div><h2>Load an event log</h2><p class="muted">Upload a CSV or Excel workbook using your existing column names.</p></div><label class="upload-button">Choose file<input id="csv-file" type="file" accept=".csv,.xlsx,.xls,.xlsb,text/csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel"></label></div>
+        <div id="data-quality" class="quality hidden"></div>
+      </section>
+      <section id="mapping-panel" class="card mapping-card hidden">
+        <div class="card-heading"><div><h2>Review column mapping</h2><p class="muted">Confirm what each source column means. Fields marked * are required.</p></div></div>
+        <div id="workbook-controls" class="filter hidden" style="max-width:360px"><label for="sheet-select">Worksheet to import</label><select id="sheet-select"></select></div>
+        <div id="mapping-fields" class="mapping-grid"></div>
+        <h2>Source preview</h2><div class="preview-wrap"><table id="mapping-preview"></table></div>
+        <button id="apply-mapping" class="primary-button" type="button">Analyze mapped data</button>
+      </section>
+    </section>
+
+    <footer class="app-footer">Meridian App V.002 · Evidence-backed process improvement</footer>
   </main>
+
   <script src="vendor/xlsx.full.min.js"></script>
   <script src="src/analysis.js"></script>
   <script src="src/workbook-import.js"></script>
   <script src="src/sample-data.js"></script>
+  <script src="src/ui.js"></script>
   <script src="src/app.js"></script>
 </body>
 </html>

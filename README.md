@@ -1,6 +1,6 @@
-# Meridian App V.001
+# Meridian App V.002
 
-Portable first vertical slice for order-fulfillment efficiency analysis.
+Portable process-intelligence workspace for order-fulfillment efficiency analysis.
 
 ## Run it
 
@@ -17,6 +17,7 @@ Synthetic order events are transformed into:
 - Process-variant comparison
 - Ranked improvement opportunities with adjustable assumptions
 - Order-level evidence timelines
+- Accessible Overview, Process, Opportunities, Cases, and Data views
 
 The dataset is intentionally fictional and must not be treated as a finding about Meridian’s real operations.
 
@@ -25,6 +26,8 @@ Financial figures are scenario estimates. Delay value is calculated from recover
 ## Project layout
 
 - `index.html` — portable app shell
+- `src/styles.css` — Meridian visual system and responsive layouts
+- `src/ui.js` — accessible tab navigation and view state
 - `src/analysis.js` — reusable, tested analysis logic
 - `src/sample-data.js` — deterministic 24-order fictional pilot dataset
 - `src/app.js` — synthetic data and browser interactions

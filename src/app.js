@@ -75,6 +75,7 @@ function applyMapping() {
     currentSource = `${pendingImport.fileName} (mapped import)`;
     populateDepartments(currentOrders);
     render();
+    window.MeridianUI.activateTab("overview");
   }
 }
 
@@ -85,7 +86,11 @@ function getFilters() {
 function render() {
   const filteredOrders = filterOrders(currentOrders, getFilters());
   const analysis = summarizeOrders(filteredOrders);
-  const metric = (label, value) => `<div class="card"><div class="metric-label">${label}</div><div class="metric-value">${value}</div></div>`;
+  const isDemo = currentSource === "synthetic pilot data";
+  document.querySelector("#dataset-name").textContent = currentSource;
+  document.querySelector("#dataset-meta").textContent = `${currentOrders.length} orders · ${isDemo ? "Demonstration data" : "Imported data"}`;
+  document.querySelector("#dataset-notice").hidden = !isDemo;
+  const metric = (label, value) => `<div class="card metric-card"><div class="metric-label">${label}</div><div class="metric-value">${value}</div></div>`;
   document.querySelector("#result-count").textContent = `Showing ${filteredOrders.length} of ${currentOrders.length} orders`;
   document.querySelector("#metrics").innerHTML = [metric("Orders analyzed", analysis.orders.length), metric("Avg. cycle time", `${analysis.avgCycle.toFixed(1)} hrs`), metric("Avg. waiting time", `${analysis.avgWait.toFixed(1)} hrs`), metric("Late shipments", `${(analysis.lateRate * 100).toFixed(0)}%`), metric("Rework rate", `${(analysis.reworkRate * 100).toFixed(0)}%`)].join("");
   const topWait = analysis.waitByTransition[0] || { transition: "Not enough events", hours: 0, occurrences: 0 };
@@ -103,9 +108,14 @@ function render() {
   renderTimeline(analysis.orders[0]?.order_id);
   const variants = buildVariants(filteredOrders);
   document.querySelector("#variants").innerHTML = variants.length ? variants.map((variant, index) => `<tr><td>${index + 1}</td><td class="variant-path">${escapeHtml(variant.path)}</td><td>${variant.count}</td><td>${variant.avgCycle.toFixed(1)} hrs</td><td>${variant.late}</td><td>${variant.rework}</td></tr>`).join("") : `<tr><td colspan="6" class="muted">No process variants match the selected filters.</td></tr>`;
+  const primaryVariant = variants[0];
+  document.querySelector("#process-preview-count").textContent = primaryVariant ? `${primaryVariant.count} orders` : "No orders";
+  document.querySelector("#process-preview").innerHTML = primaryVariant ? primaryVariant.path.split(" → ").map((activity, index, path) => `<div class="process-node">${escapeHtml(activity)}</div>${index < path.length - 1 ? '<span class="process-arrow" aria-hidden="true">›</span>' : ""}`).join("") : `<p class="muted">No process path matches the selected filters.</p>`;
   const assumptions = { waitTargetHours: document.querySelector("#wait-target").value, valuePerHour: document.querySelector("#hour-value").value };
   const opportunities = rankOpportunities(filteredOrders, assumptions).slice(0, 5);
   document.querySelector("#opportunities").innerHTML = opportunities.length ? opportunities.map((opportunity, index) => `<article class="opportunity"><div class="opportunity-rank">${index + 1}</div><div><div class="opportunity-heading"><strong>${escapeHtml(opportunity.title)}</strong><span class="pill ${opportunity.confidence === "Strong" ? "good" : "warn"}">${opportunity.confidence} evidence</span></div><p>${escapeHtml(opportunity.evidence)}</p><div class="opportunity-impact"><span><b>${opportunity.affectedOrders}</b> affected orders</span><span><b>${opportunity.recoverableHours.toFixed(1)}</b> recoverable hours</span><span><b>$${opportunity.estimatedValue.toFixed(2)}</b> ${escapeHtml(opportunity.valueLabel.toLowerCase())}</span></div></div></article>`).join("") : `<p class="muted">No opportunities exceed the current assumptions.</p>`;
+  const priority = opportunities[0];
+  document.querySelector("#overview-priority").innerHTML = priority ? `<div class="card-heading"><div><h2>Top priority</h2><p class="muted">Highest modeled value in the active scope.</p></div><span class="pill ${priority.confidence === "Strong" ? "good" : "warn"}">${priority.confidence}</span></div><p class="priority-title"><strong>${escapeHtml(priority.title)}</strong></p><div class="priority-value">$${priority.estimatedValue.toFixed(0)}</div><p class="muted">${priority.affectedOrders} affected orders · ${priority.recoverableHours.toFixed(1)} recoverable hours</p>` : `<h2>Top priority</h2><p class="muted">No opportunity exceeds the current assumptions.</p>`;
 }
 
 document.querySelector("#csv-file").addEventListener("change", event => {

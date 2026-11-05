@@ -44,8 +44,8 @@
 - [x] Research process-mining and dashboard UI references
 - [x] Select the client-side visualization approach
 - [x] Define the five-view application structure
-- [ ] Approve the V.002 UI plan and visual direction
-- [ ] Build the UI foundation and Overview vertical slice
+- [x] Approve the V.002 UI plan and visual direction
+- [x] Build the UI foundation and Overview vertical slice
 - [ ] Build the interactive Process view
 - [ ] Migrate Opportunities, Cases, and Data views
 - [ ] Fine-tune accessibility, responsiveness, and performance

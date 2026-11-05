@@ -19,5 +19,6 @@
 - [x] Add CSV import using the same event schema
 - [x] Add a data-quality report
 - [x] Add a sample order event log
-- [ ] Add filters and process-variant comparison
+- [x] Add filters and process-variant comparison
+- [x] Add automated checks for analysis calculations
 - [ ] Review results with Meridian stakeholders

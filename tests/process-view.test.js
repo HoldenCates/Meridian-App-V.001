@@ -27,6 +27,8 @@ assert.match(processSource, /aria:\s*\{\s*enabled:\s*true/);
 assert.match(processSource, /renderer:\s*"canvas"/);
 assert.match(processSource, /getPropertyValue\(token\)/);
 assert.match(processSource, /--chart-frequency/);
+assert.match(processSource, /estimatedCenterGap/);
+assert.match(processSource, /wrapActivityName/);
 
 const graph = buildProcessGraph(analyzeEvents(syntheticEvents));
 const core = project(graph, "core");

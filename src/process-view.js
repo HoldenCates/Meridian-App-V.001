@@ -8,6 +8,19 @@
   const edgeMetric = (edge, overlay) => overlay === "duration" ? edge.avgHours : overlay === "cost" ? edge.totalCost : edge.occurrences;
   const edgeDisplay = (edge, overlay) => overlay === "duration" ? `${edge.avgHours.toFixed(1)}h` : overlay === "cost" ? `$${edge.totalCost.toFixed(0)}` : `${edge.occurrences}`;
   const edgeId = (source, target) => `${source}|||${target}`;
+  const wrapActivityName = (name, compact) => {
+    if (!compact || !name.includes(" ")) return name;
+    const words = name.split(" ");
+    const midpoint = Math.ceil(words.length / 2);
+    return `${words.slice(0, midpoint).join(" ")}\n${words.slice(midpoint).join(" ")}`;
+  };
+
+  function nodeDimensions(container, projection) {
+    const backboneCount = Math.max(2, projection.dominantPath.length);
+    const estimatedCenterGap = Math.max(120, (container.clientWidth - 88) / (backboneCount - 1));
+    const width = Math.round(Math.min(150, Math.max(90, estimatedCenterGap - 34)));
+    return { width, height: width < 132 ? 74 : 64, compact: width < 132 };
+  }
 
   function project(graph, mode = "exceptions", bottleneckTargetHours = 2) {
     const detailMode = ["core", "exceptions", "full"].includes(mode) ? mode : "exceptions";
@@ -80,6 +93,7 @@
     }
     const maximumEdgeValue = Math.max(0, ...projection.edges.map(edge => edgeMetric(edge, overlay)));
     const bottleneckNodes = new Set(projection.edges.filter(edge => projection.bottleneckIds.has(edge.id)).flatMap(edge => [edge.source, edge.target]));
+    const dimensions = nodeDimensions(container, projection);
     const nodes = projection.nodes.map((node, index) => {
       const position = nodePosition(node, index, projection);
       const isBackbone = projection.dominantPath.includes(node.name);
@@ -90,7 +104,7 @@
         ...position,
         value: node.cases,
         symbol: "rect",
-        symbolSize: [158, 62],
+        symbolSize: [dimensions.width, dimensions.height],
         itemStyle: {
           color: node.reworkOccurrences ? themeColor("--chart-node-rework", "#fff2c2") : themeColor("--chart-node", "#fffdf5"),
           borderColor: isBottleneck ? themeColor("--chart-duration-high", "#b42318") : node.reworkOccurrences ? themeColor("--chart-node-rework-border", "#b26b00") : themeColor("--chart-node-border", "#b88912"),
@@ -101,10 +115,10 @@
         label: {
           show: true,
           position: "inside",
-          formatter: params => `{name|${params.data.name}}\n{metric|${params.data.cases} ORDERS${params.data.reworkOccurrences ? ` · ${params.data.reworkOccurrences} REPEAT` : ""}}`,
+          formatter: params => `{name|${wrapActivityName(params.data.name, dimensions.compact)}}\n{metric|${params.data.cases} ORDERS${params.data.reworkOccurrences ? ` · ${params.data.reworkOccurrences} REPEAT` : ""}}`,
           rich: {
-            name: { color: themeColor("--chart-label", "#16140f"), fontFamily: "IBM Plex Mono", fontSize: 10, fontWeight: 600, width: 136, overflow: "truncate", lineHeight: 18, align: "center" },
-            metric: { color: isBottleneck ? themeColor("--chart-duration-high", "#b42318") : themeColor("--chart-node-metric", "#a99a72"), fontFamily: "IBM Plex Mono", fontSize: 8, width: 136, align: "center" }
+            name: { color: themeColor("--chart-label", "#16140f"), fontFamily: "IBM Plex Mono", fontSize: dimensions.compact ? 9 : 10, fontWeight: 600, width: dimensions.width - 16, overflow: "truncate", lineHeight: dimensions.compact ? 13 : 18, align: "center" },
+            metric: { color: isBottleneck ? themeColor("--chart-duration-high", "#b42318") : themeColor("--chart-node-metric", "#a99a72"), fontFamily: "IBM Plex Mono", fontSize: 8, width: dimensions.width - 16, lineHeight: 13, align: "center" }
           }
         }
       };

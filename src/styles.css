@@ -220,6 +220,11 @@ button:focus-visible,.upload-button:focus-within { outline:3px solid #d8b84e; ou
   font-variant-numeric:tabular-nums;
 }
 
+@media (max-width:1180px) {
+  .process-layout { grid-template-columns:1fr; }
+  .process-detail { min-height:0; }
+}
+
 @media (max-width:900px) {
   .app-header-inner { align-items:flex-start; flex-direction:column; }
   .dataset-summary { width:100%; }

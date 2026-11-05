@@ -47,8 +47,8 @@
 - [x] Approve the V.002 UI plan and visual direction
 - [x] Build the UI foundation and Overview vertical slice
 - [x] Build the interactive Process view
-- [ ] Migrate Opportunities, Cases, and Data views
-- [ ] Fine-tune accessibility, responsiveness, and performance
+- [x] Migrate Opportunities, Cases, and Data views
+- [x] Fine-tune accessibility, responsiveness, and performance
 - [ ] Build several realistic business datasets
 - [ ] Run end-to-end shipment and fulfillment scenarios
 - [ ] Test portable deployment on another computer

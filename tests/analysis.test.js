@@ -1,5 +1,5 @@
 const assert = require("node:assert/strict");
-const { parseCsv, suggestMappings, mapEvents, validateMapping, validateEvents, analyzeEvents, filterOrders, summarizeOrders, buildVariants, buildProcessGraph, rankOpportunities } = require("../src/analysis.js");
+const { parseCsv, suggestMappings, mapEvents, validateMapping, validateEvents, analyzeEvents, filterOrders, filterAndSortCases, summarizeOrders, buildVariants, buildProcessGraph, rankOpportunities } = require("../src/analysis.js");
 const { syntheticEvents } = require("../src/sample-data.js");
 
 const csv = `order_id,activity,timestamp,department,event_cost
@@ -49,7 +49,13 @@ const opportunities = rankOpportunities(orders, { waitTargetHours: 2, valuePerHo
 assert.equal(opportunities[0].type, "Flow delay");
 assert.equal(opportunities[0].recoverableHours, 21);
 assert.equal(opportunities[0].estimatedValue, 210);
+assert.equal(opportunities[0].processElementId, "Packed|||Shipped");
+assert.deepEqual(opportunities[0].caseIds, ["A"]);
 assert.equal(opportunities.find(opportunity => opportunity.type === "Rework").estimatedValue, 2);
+assert.deepEqual(opportunities.find(opportunity => opportunity.type === "Rework").caseIds, ["A"]);
+assert.deepEqual(filterAndSortCases(orders, { query: "b" }).map(order => order.order_id), ["B"]);
+assert.deepEqual(filterAndSortCases(orders, { sort: "cycle-desc" }).map(order => order.order_id), ["A", "B"]);
+assert.deepEqual(filterAndSortCases([...orders].reverse(), { sort: "status" }).map(order => order.order_id), ["A", "B"]);
 
 const pilotOrders = analyzeEvents(syntheticEvents);
 assert.equal(pilotOrders.length, 24);

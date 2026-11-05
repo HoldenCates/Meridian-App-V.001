@@ -219,7 +219,7 @@
     const transitions = orders.flatMap(order => order.waits).reduce((acc, wait) => {
       const key = `${wait.from} → ${wait.to}`;
       if (wait.hours > waitTargetHours) {
-        const item = acc[key] ??= { title: `Reduce ${key} waiting`, excessHours: 0, orderIds: new Set(), occurrences: 0 };
+        const item = acc[key] ??= { title: `Reduce ${key} waiting`, source: wait.from, target: wait.to, excessHours: 0, orderIds: new Set(), occurrences: 0 };
         item.excessHours += wait.hours - waitTargetHours;
         item.orderIds.add(wait.order_id);
         item.occurrences += 1;
@@ -229,6 +229,8 @@
     const delayOpportunities = Object.values(transitions).map(item => ({
       type: "Flow delay",
       title: item.title,
+      processElementId: `${item.source}|||${item.target}`,
+      caseIds: [...item.orderIds].sort(),
       affectedOrders: item.orderIds.size,
       occurrences: item.occurrences,
       recoverableHours: item.excessHours,
@@ -242,6 +244,8 @@
     const reworkOpportunity = reworkOrders.length ? [{
       type: "Rework",
       title: "Prevent repeated fulfillment activities",
+      processElementId: null,
+      caseIds: reworkOrders.map(order => order.order_id).sort(),
       affectedOrders: reworkOrders.length,
       occurrences: reworkOrders.length,
       recoverableHours: 0,
@@ -254,7 +258,19 @@
       .sort((left, right) => right.estimatedValue - left.estimatedValue || right.affectedOrders - left.affectedOrders);
   }
 
-  const api = { requiredColumns, importFields, parseCsv, parseTabularRows, suggestMappings, mapEvents, validateMapping, validateEvents, analyzeEvents, filterOrders, summarizeOrders, buildVariants, buildProcessGraph, rankOpportunities };
+  function filterAndSortCases(orders, options = {}) {
+    const query = String(options.query || "").trim().toLowerCase();
+    const statusRank = order => order.late ? 0 : order.rework ? 1 : 2;
+    return orders
+      .filter(order => !query || order.order_id.toLowerCase().includes(query))
+      .sort((left, right) => {
+        if (options.sort === "cycle-desc") return right.cycle - left.cycle || left.order_id.localeCompare(right.order_id);
+        if (options.sort === "status") return statusRank(left) - statusRank(right) || left.order_id.localeCompare(right.order_id);
+        return left.order_id.localeCompare(right.order_id);
+      });
+  }
+
+  const api = { requiredColumns, importFields, parseCsv, parseTabularRows, suggestMappings, mapEvents, validateMapping, validateEvents, analyzeEvents, filterOrders, filterAndSortCases, summarizeOrders, buildVariants, buildProcessGraph, rankOpportunities };
   root.MeridianAnalysis = api;
   if (typeof module !== "undefined" && module.exports) module.exports = api;
 })(typeof window !== "undefined" ? window : globalThis);

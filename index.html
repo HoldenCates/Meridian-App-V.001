@@ -97,15 +97,17 @@
     <section id="panel-cases" class="tab-panel" role="tabpanel" aria-labelledby="tab-cases" data-tab-panel="cases" tabindex="0" hidden>
       <div class="page-heading"><div><h2>Cases</h2><p>Inspect the order-level evidence behind every metric and finding.</p></div></div>
       <section class="order-layout">
-        <div class="card"><div class="card-heading"><div><h2>Orders</h2><p class="muted">Select an order to inspect.</p></div></div><div id="orders" class="order-list"></div></div>
+        <div class="card"><div class="card-heading"><div><h2>Orders</h2><p class="muted">Search, sort, and select an order.</p></div></div><div class="case-controls"><div class="filter"><label for="case-search">Search order ID</label><input id="case-search" type="search" placeholder="Example: ORD-014"></div><div class="filter"><label for="case-sort">Sort orders</label><select id="case-sort"><option value="order">Order ID</option><option value="cycle-desc">Longest cycle first</option><option value="status">Attention needed first</option></select></div></div><div id="case-result-count" class="muted case-result-count" aria-live="polite"></div><div id="orders" class="order-list"></div></div>
         <div class="card"><div class="card-heading"><div><h2>Order timeline</h2><p class="muted">Ordered source events with department and resource context.</p></div></div><div id="timeline" class="timeline"></div></div>
       </section>
     </section>
 
     <section id="panel-data" class="tab-panel" role="tabpanel" aria-labelledby="tab-data" data-tab-panel="data" tabindex="0" hidden>
       <div class="page-heading"><div><h2>Data</h2><p>Load, map, preview, and validate an event log before analysis.</p></div></div>
+      <section id="data-summary" class="card data-summary" aria-live="polite"></section>
       <section class="card">
         <div class="import-row"><div><h2>Load an event log</h2><p class="muted">Upload a CSV or Excel workbook using your existing column names.</p></div><label class="upload-button">Choose file<input id="csv-file" type="file" accept=".csv,.xlsx,.xls,.xlsb,text/csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel"></label></div>
+        <div id="import-status" class="status-panel info" role="status" aria-live="polite"><strong>Ready for a file</strong><span>CSV and Excel files remain on this computer while Meridian analyzes them.</span></div>
         <div id="data-quality" class="quality hidden"></div>
       </section>
       <section id="mapping-panel" class="card mapping-card hidden">

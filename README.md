@@ -20,6 +20,9 @@ Synthetic order events are transformed into:
 - Accessible Overview, Process, Opportunities, Cases, and Data views
 - Interactive process map with frequency, waiting-time, and cost overlays
 - Activity and transition evidence with direct order drill-down
+- Opportunity-to-process and opportunity-to-case evidence links
+- Searchable, sortable case review with cycle-time and status context
+- Guided file-import status from upload through validated analysis
 
 The dataset is intentionally fictional and must not be treated as a finding about Meridian’s real operations.
 

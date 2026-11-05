@@ -1,4 +1,4 @@
-const { importFields, parseCsv, suggestMappings, mapEvents, validateMapping, validateEvents, analyzeEvents, filterOrders, summarizeOrders, buildVariants, buildProcessGraph, rankOpportunities } = window.MeridianAnalysis;
+const { importFields, parseCsv, suggestMappings, mapEvents, validateMapping, validateEvents, analyzeEvents, filterOrders, filterAndSortCases, summarizeOrders, buildVariants, buildProcessGraph, rankOpportunities } = window.MeridianAnalysis;
 const { parseWorkbook } = window.MeridianWorkbookImport;
 const { syntheticEvents } = window.MeridianSampleData;
 const escapeHtml = value => String(value).replace(/[&<>'"]/g, character => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", "'": "&#39;", '"': "&quot;" }[character]));
@@ -10,7 +10,14 @@ let activeAnalysisOrders = [];
 let currentProcessGraph = { nodes: [], edges: [], dominantPath: [], variants: [], orders: 0 };
 let currentProcessOverlay = "frequency";
 let selectedProcessElement = null;
+let selectedOrderId = null;
 const fieldLabels = { order_id: "Order identifier", activity: "Activity / process step", timestamp: "Event timestamp", department: "Department", resource: "Employee / resource", event_cost: "Event cost" };
+
+function setImportStatus(kind, title, message) {
+  const status = document.querySelector("#import-status");
+  status.className = `status-panel ${kind}`;
+  status.innerHTML = `<strong>${escapeHtml(title)}</strong><span>${escapeHtml(message)}</span>`;
+}
 
 function showQuality(result, source) {
   const quality = document.querySelector("#data-quality");
@@ -39,12 +46,14 @@ function renderMapping(parsed, fileName) {
   const quality = document.querySelector("#data-quality");
   quality.className = "quality good";
   quality.innerHTML = `<strong>${escapeHtml(fileName)} loaded</strong><ul><li>${parsed.events.length} rows and ${parsed.columns.length} columns found. Review the suggested mapping before analysis.</li></ul>`;
+  setImportStatus("info", "File read successfully", "Confirm the suggested column mapping, then analyze the data.");
 }
 
 function showImportError(message) {
   const quality = document.querySelector("#data-quality");
   quality.className = "quality warn";
   quality.innerHTML = `<strong>File could not be loaded</strong><ul><li>${escapeHtml(message)}</li></ul>`;
+  setImportStatus("warn", "Import stopped", message);
 }
 
 function loadWorkbookSheet(sheetName) {
@@ -69,8 +78,10 @@ function applyMapping() {
     const quality = document.querySelector("#data-quality");
     quality.className = "quality warn";
     quality.innerHTML = `<strong>Mapping needs attention</strong><ul>${issues.map(issue => `<li>${escapeHtml(issue)}</li>`).join("")}</ul>`;
+    setImportStatus("warn", "Mapping needs attention", "Complete the required fields and ensure each source column is used once.");
     return;
   }
+  setImportStatus("info", "Analyzing mapped data", "Meridian is validating events and rebuilding every view.");
   const mappedEvents = mapEvents(pendingImport.events, mapping);
   const validation = validateEvents(mappedEvents, importFields.filter(field => mapping[field]));
   showQuality(validation, pendingImport.fileName);
@@ -79,6 +90,7 @@ function applyMapping() {
     currentSource = `${pendingImport.fileName} (mapped import)`;
     populateDepartments(currentOrders);
     render();
+    setImportStatus("good", "Dataset ready", `${currentOrders.length} orders are available across every view.`);
     window.MeridianUI.activateTab("overview");
   }
 }
@@ -89,12 +101,44 @@ function getFilters() {
 
 function renderOrderTimeline(orderId) {
   const order = activeAnalysisOrders.find(item => item.order_id === orderId);
+  selectedOrderId = order?.order_id || null;
+  document.querySelectorAll("[data-order]").forEach(button => button.setAttribute("aria-current", String(button.dataset.order === selectedOrderId)));
   document.querySelector("#timeline").innerHTML = order ? `<h3>${escapeHtml(order.order_id)} timeline</h3>${order.events.map(event => `<div class="event"><div class="event-time">${new Date(event.timestamp).toLocaleString()}</div><div><strong>${escapeHtml(event.activity)}</strong><br><small>${escapeHtml(event.department || "Unassigned")} · ${escapeHtml(event.resource || "Unassigned")}</small></div></div>`).join("")}` : `<p class="muted">Select an order to inspect its source events.</p>`;
 }
 
+function renderCaseList() {
+  const query = document.querySelector("#case-search").value;
+  const sort = document.querySelector("#case-sort").value;
+  const cases = filterAndSortCases(activeAnalysisOrders, { query, sort });
+  document.querySelector("#case-result-count").textContent = `${cases.length} of ${activeAnalysisOrders.length} orders`;
+  document.querySelector("#orders").innerHTML = cases.length ? cases.map(order => {
+    const status = order.late ? "Late" : order.rework ? "Rework" : "On track";
+    const statusClass = order.late ? "bad" : order.rework ? "warn" : "good";
+    return `<button type="button" data-order="${escapeHtml(order.order_id)}" aria-current="${order.order_id === selectedOrderId}"><span class="case-row-copy"><strong>${escapeHtml(order.order_id)}</strong><small>${order.cycle.toFixed(1)} hour cycle</small></span><span class="pill ${statusClass}">${status}</span></button>`;
+  }).join("") : `<p class="muted">No order IDs match this search.</p>`;
+  document.querySelectorAll("[data-order]").forEach(button => button.addEventListener("click", () => renderOrderTimeline(button.dataset.order)));
+  if (!cases.some(order => order.order_id === selectedOrderId)) renderOrderTimeline(cases[0]?.order_id);
+}
+
 function openOrderEvidence(orderId) {
+  document.querySelector("#case-search").value = "";
+  renderCaseList();
   window.MeridianUI.activateTab("cases");
   renderOrderTimeline(orderId);
+}
+
+function inspectOpportunity(opportunity) {
+  if (opportunity.processElementId) {
+    const edge = currentProcessGraph.edges.find(item => item.id === opportunity.processElementId);
+    window.MeridianUI.activateTab("process");
+    if (edge) renderProcessDetail("edge", edge, true);
+    return;
+  }
+  if (opportunity.caseIds?.length) openOrderEvidence(opportunity.caseIds[0]);
+}
+
+function bindOpportunityActions(opportunities) {
+  document.querySelectorAll("[data-opportunity-index]").forEach(button => button.addEventListener("click", () => inspectOpportunity(opportunities[Number(button.dataset.opportunityIndex)])));
 }
 
 function renderProcessDetail(type, item, selectOnChart = false) {
@@ -155,22 +199,24 @@ function render() {
     `<div class="finding"><strong>${analysis.orders.filter(order => order.late).length} late shipments</strong><span>Orders exceeding the 24-hour pilot fulfillment target.</span><br><small>Estimated event cost in selection: $${analysis.totalCost.toFixed(2)}.</small></div>`
   ].join("") : `<p class="muted">No orders match the selected filters.</p>`;
   activeAnalysisOrders = analysis.orders;
-  document.querySelector("#orders").innerHTML = analysis.orders.map(order => `<button data-order="${escapeHtml(order.order_id)}">${escapeHtml(order.order_id)} <span class="pill ${order.late ? "bad" : order.rework ? "warn" : "good"}">${order.late ? "Late" : order.rework ? "Rework" : "On track"}</span></button>`).join(" ");
-  document.querySelectorAll("[data-order]").forEach(button => button.addEventListener("click", () => renderOrderTimeline(button.dataset.order)));
-  renderOrderTimeline(analysis.orders[0]?.order_id);
+  renderCaseList();
   const variants = buildVariants(filteredOrders);
   document.querySelector("#variants").innerHTML = variants.length ? variants.map((variant, index) => `<tr><td>${index + 1}</td><td class="variant-path">${escapeHtml(variant.path)}</td><td>${variant.count}</td><td>${variant.avgCycle.toFixed(1)} hrs</td><td>${variant.late}</td><td>${variant.rework}</td></tr>`).join("") : `<tr><td colspan="6" class="muted">No process variants match the selected filters.</td></tr>`;
   updateProcessView(filteredOrders);
   const assumptions = { waitTargetHours: document.querySelector("#wait-target").value, valuePerHour: document.querySelector("#hour-value").value };
   const opportunities = rankOpportunities(filteredOrders, assumptions).slice(0, 5);
-  document.querySelector("#opportunities").innerHTML = opportunities.length ? opportunities.map((opportunity, index) => `<article class="opportunity"><div class="opportunity-rank">${index + 1}</div><div><div class="opportunity-heading"><strong>${escapeHtml(opportunity.title)}</strong><span class="pill ${opportunity.confidence === "Strong" ? "good" : "warn"}">${opportunity.confidence} evidence</span></div><p>${escapeHtml(opportunity.evidence)}</p><div class="opportunity-impact"><span><b>${opportunity.affectedOrders}</b> affected orders</span><span><b>${opportunity.recoverableHours.toFixed(1)}</b> recoverable hours</span><span><b>$${opportunity.estimatedValue.toFixed(2)}</b> ${escapeHtml(opportunity.valueLabel.toLowerCase())}</span></div></div></article>`).join("") : `<p class="muted">No opportunities exceed the current assumptions.</p>`;
+  document.querySelector("#opportunities").innerHTML = opportunities.length ? opportunities.map((opportunity, index) => `<article class="opportunity"><div class="opportunity-rank">${index + 1}</div><div><div class="opportunity-heading"><strong>${escapeHtml(opportunity.title)}</strong><span class="pill ${opportunity.confidence === "Strong" ? "good" : "warn"}">${opportunity.confidence} evidence</span></div><p>${escapeHtml(opportunity.evidence)}</p><div class="opportunity-impact"><span><b>${opportunity.affectedOrders}</b> affected orders</span><span><b>${opportunity.recoverableHours.toFixed(1)}</b> recoverable hours</span><span><b>$${opportunity.estimatedValue.toFixed(2)}</b> ${escapeHtml(opportunity.valueLabel.toLowerCase())}</span></div><button class="opportunity-action" type="button" data-opportunity-index="${index}">${opportunity.processElementId ? "Inspect in Process" : "View supporting case"}</button></div></article>`).join("") : `<p class="muted">No opportunities exceed the current assumptions.</p>`;
   const priority = opportunities[0];
-  document.querySelector("#overview-priority").innerHTML = priority ? `<div class="card-heading"><div><h2>Top priority</h2><p class="muted">Highest modeled value in the active scope.</p></div><span class="pill ${priority.confidence === "Strong" ? "good" : "warn"}">${priority.confidence}</span></div><p class="priority-title"><strong>${escapeHtml(priority.title)}</strong></p><div class="priority-value">$${priority.estimatedValue.toFixed(0)}</div><p class="muted">${priority.affectedOrders} affected orders · ${priority.recoverableHours.toFixed(1)} recoverable hours</p>` : `<h2>Top priority</h2><p class="muted">No opportunity exceeds the current assumptions.</p>`;
+  document.querySelector("#overview-priority").innerHTML = priority ? `<div class="card-heading"><div><h2>Top priority</h2><p class="muted">Highest modeled value in the active scope.</p></div><span class="pill ${priority.confidence === "Strong" ? "good" : "warn"}">${priority.confidence}</span></div><p class="priority-title"><strong>${escapeHtml(priority.title)}</strong></p><div class="priority-value">$${priority.estimatedValue.toFixed(0)}</div><p class="muted">${priority.affectedOrders} affected orders · ${priority.recoverableHours.toFixed(1)} recoverable hours</p><button class="priority-action" type="button" data-opportunity-index="0">Review supporting evidence</button>` : `<h2>Top priority</h2><p class="muted">No opportunity exceeds the current assumptions.</p>`;
+  bindOpportunityActions(opportunities);
+  document.querySelector("#data-summary").innerHTML = `<div class="card-heading"><div><h2>Active dataset</h2><p class="muted">The source currently driving every Meridian view.</p></div><span class="pill ${isDemo ? "warn" : "good"}">${isDemo ? "Demonstration" : "Imported"}</span></div><div class="data-summary-grid"><div class="detail-metric"><span>Source</span><strong>${escapeHtml(currentSource)}</strong></div><div class="detail-metric"><span>Orders</span><strong>${currentOrders.length}</strong></div><div class="detail-metric"><span>Events</span><strong>${currentOrders.reduce((total, order) => total + order.events.length, 0)}</strong></div></div>`;
 }
 
 document.querySelector("#csv-file").addEventListener("change", event => {
   const file = event.target.files[0];
   if (!file) return;
+  document.querySelector("#mapping-panel").classList.add("hidden");
+  setImportStatus("info", "Reading file", `${file.name} is being opened on this computer.`);
   const reader = new FileReader();
   reader.onload = () => {
     if (/\.(xlsx|xls|xlsb)$/i.test(file.name)) {
@@ -189,6 +235,8 @@ document.querySelector("#csv-file").addEventListener("change", event => {
 
 document.querySelector("#apply-mapping").addEventListener("click", applyMapping);
 document.querySelector("#sheet-select").addEventListener("change", event => loadWorkbookSheet(event.target.value));
+document.querySelector("#case-search").addEventListener("input", renderCaseList);
+document.querySelector("#case-sort").addEventListener("change", renderCaseList);
 
 document.querySelectorAll("[data-process-overlay]").forEach(button => button.addEventListener("click", () => {
   currentProcessOverlay = button.dataset.processOverlay;

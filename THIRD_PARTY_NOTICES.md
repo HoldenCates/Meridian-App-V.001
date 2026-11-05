@@ -20,16 +20,6 @@ Meridian App V.001 includes the unmodified standalone browser build at `vendor/x
 
 Meridian App V.002 includes the unmodified minified browser build at `vendor/echarts.min.js` to render interactive process maps locally. The full license text is included at `vendor/LICENSE-ECharts.txt`.
 
-## Geist Pixel
-
-- Version: 1.9.1 npm package
-- Copyright: Vercel and the Geist project contributors
-- License: SIL Open Font License 1.1
-- Project: https://vercel.com/font
-- Package: https://www.npmjs.com/package/geist
-
-Meridian includes Geist Pixel Square at `vendor/fonts/GeistPixel-Square.woff2` for workspace navigation. The license text is included at `vendor/fonts/LICENSE-Geist.txt`.
-
 ## IBM Plex Mono
 
 - Version: 2.5.0 npm package

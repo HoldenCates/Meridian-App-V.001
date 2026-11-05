@@ -22,8 +22,7 @@ The dependency is stored locally so process visualization works without an inter
 
 The `fonts` directory contains only the browser files used by Meridian, extracted from the official npm packages so typography remains available offline:
 
-- Geist Pixel Square from `geist` 1.9.1 — SHA-256 `80887AFEDE26BC861E92DBFBB17A775D769E46E7C84F336B1C9F17959F60606D`
 - IBM Plex Mono Regular from `@ibm/plex-mono` 2.5.0 — SHA-256 `BA204497F16B6D334CEE9D1E963A831B73E3A56E1D6300A8489D18DF7214B350`
 - IBM Plex Mono SemiBold from `@ibm/plex-mono` 2.5.0 — SHA-256 `6A825B4824C01CBB401E829E5A066A1818411BCB3538B5A5792C5CA9B82343C3`
 
-Both font families use the SIL Open Font License 1.1. Their license texts are included beside the font files.
+IBM Plex Mono uses the SIL Open Font License 1.1. Its license text is included beside the font files.

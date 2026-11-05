@@ -51,7 +51,7 @@ Excel import is powered by the locally vendored SheetJS Community Edition 0.20.3
 
 Process visualization is powered by the locally vendored Apache ECharts 6.1.0 Canvas build. See `THIRD_PARTY_NOTICES.md` and `vendor/LICENSE-ECharts.txt` for attribution and license terms.
 
-The interface uses a black-and-gold Meridian palette, Geist Pixel Square for primary navigation, and IBM Plex Mono for order IDs, prices, metrics, and operational values. Font files are stored locally under `vendor/fonts` so the app remains portable and offline-ready.
+The personal interface uses a black-and-gold tactical palette with IBM Plex Mono throughout the complete application. Font files are stored locally under `vendor/fonts` so the app remains portable and offline-ready.
 
 This repository currently uses the personal `holden-console` theme in `src/theme-holden.css`. Shared layout and analysis behavior remain separate so customer distributions can receive their own colors, typography, identity, and visual treatment. See `docs/THEMING.md` for the customization contract.
 

@@ -26,18 +26,18 @@ assert.match(html, /<script src="src\/ui\.js"><\/script>/);
 assert.match(appSource, /function renderCaseList\(\)/);
 assert.match(appSource, /function inspectOpportunity\(opportunity\)/);
 assert.match(appSource, /setImportStatus\("good", "Dataset ready"/);
-assert.match(styles, /font-family:\"Geist Pixel Square\"/);
 assert.match(styles, /font-family:\"IBM Plex Mono\"/);
+assert.match(styles, /body \{[^}]+font-family:var\(--font-mono\)/);
+assert.doesNotMatch(styles, /Geist Pixel/);
 assert.match(styles, /--accent-600:#c9a227/);
-assert.match(personalTheme, /--canvas:#070706/);
+assert.match(personalTheme, /--canvas:#000000/);
 assert.match(personalTheme, /content:attr\(data-console-label\)/);
 assert.match(personalTheme, /@keyframes consoleReveal/);
 assert.match(appSource, /buildProcessGraph/);
-["GeistPixel-Square.woff2", "IBMPlexMono-Regular.woff2", "IBMPlexMono-SemiBold.woff2", "LICENSE-Geist.txt", "LICENSE-IBM-Plex.txt"].forEach(file => {
+["IBMPlexMono-Regular.woff2", "IBMPlexMono-SemiBold.woff2", "LICENSE-IBM-Plex.txt"].forEach(file => {
   assert.ok(fs.existsSync(path.join(__dirname, "..", "vendor", "fonts", file)), `Missing vendored font asset ${file}`);
 });
 const fontHashes = {
-  "GeistPixel-Square.woff2": "80887AFEDE26BC861E92DBFBB17A775D769E46E7C84F336B1C9F17959F60606D",
   "IBMPlexMono-Regular.woff2": "BA204497F16B6D334CEE9D1E963A831B73E3A56E1D6300A8489D18DF7214B350",
   "IBMPlexMono-SemiBold.woff2": "6A825B4824C01CBB401E829E5A066A1818411BCB3538B5A5792C5CA9B82343C3"
 };

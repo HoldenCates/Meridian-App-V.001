@@ -117,8 +117,8 @@
           position: "inside",
           formatter: params => `{name|${wrapActivityName(params.data.name, dimensions.compact)}}\n{metric|${params.data.cases} ORDERS${params.data.reworkOccurrences ? ` · ${params.data.reworkOccurrences} REPEAT` : ""}}`,
           rich: {
-            name: { color: themeColor("--chart-label", "#16140f"), fontFamily: "IBM Plex Mono", fontSize: dimensions.compact ? 9 : 10, fontWeight: 600, width: dimensions.width - 16, overflow: "truncate", lineHeight: dimensions.compact ? 13 : 18, align: "center" },
-            metric: { color: isBottleneck ? themeColor("--chart-duration-high", "#b42318") : themeColor("--chart-node-metric", "#a99a72"), fontFamily: "IBM Plex Mono", fontSize: 8, width: dimensions.width - 16, lineHeight: 13, align: "center" }
+            name: { color: themeColor("--chart-label", "#16140f"), fontFamily: "IBM Plex Mono", fontSize: dimensions.compact ? 11 : 12, fontWeight: 600, width: dimensions.width - 14, overflow: "truncate", lineHeight: dimensions.compact ? 15 : 19, align: "center" },
+            metric: { color: isBottleneck ? themeColor("--chart-duration-high", "#b42318") : themeColor("--chart-node-metric", "#a99a72"), fontFamily: "IBM Plex Mono", fontSize: 9, width: dimensions.width - 14, lineHeight: 14, align: "center" }
           }
         }
       };

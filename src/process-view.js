@@ -7,10 +7,10 @@
   const edgeDisplay = (edge, overlay) => overlay === "duration" ? `${edge.avgHours.toFixed(1)}h` : overlay === "cost" ? `$${edge.totalCost.toFixed(0)}` : `${edge.occurrences}`;
 
   function edgeColor(value, maximum, overlay) {
-    if (overlay === "frequency") return "#2563eb";
+    if (overlay === "frequency") return "#b88912";
     const ratio = maximum ? value / maximum : 0;
-    if (overlay === "duration") return ratio > 0.65 ? "#d92d20" : ratio > 0.35 ? "#f79009" : "#2e90fa";
-    return ratio > 0.65 ? "#7f56d9" : ratio > 0.35 ? "#9e77ed" : "#b692f6";
+    if (overlay === "duration") return ratio > 0.65 ? "#b42318" : ratio > 0.35 ? "#d58a0b" : "#c9a227";
+    return ratio > 0.65 ? "#6f5200" : ratio > 0.35 ? "#a77d09" : "#d4af37";
   }
 
   function render(container, graph, overlay, onSelect) {
@@ -30,8 +30,8 @@
       value: node.cases,
       symbol: "circle",
       symbolSize: 50 + 18 * (node.cases / maximumCases),
-      itemStyle: { color: node.reworkOccurrences ? "#fffaeb" : "#eff8ff", borderColor: node.reworkOccurrences ? "#f79009" : "#2e90fa", borderWidth: 2 },
-      label: { color: "#102a46", fontSize: 10, fontWeight: 700, width: 100, overflow: "break", position: "bottom", distance: 8 }
+      itemStyle: { color: node.reworkOccurrences ? "#fff2c2" : "#fffdf5", borderColor: node.reworkOccurrences ? "#b26b00" : "#b88912", borderWidth: 2 },
+      label: { color: "#16140f", fontSize: 10, fontWeight: 700, width: 100, overflow: "break", position: "bottom", distance: 8 }
     }));
     const links = graph.edges.map(edge => {
       const value = edgeMetric(edge, overlay);
@@ -69,7 +69,7 @@
         edgeSymbol: ["none", "arrow"],
         edgeSymbolSize: 8,
         label: { show: true },
-        edgeLabel: { show: true, formatter: params => params.data.displayValue, color: "#475467", fontSize: 10, backgroundColor: "rgba(255,255,255,.86)", padding: [2, 4], borderRadius: 3 },
+        edgeLabel: { show: true, formatter: params => params.data.displayValue, color: "#403c32", fontFamily: "IBM Plex Mono", fontSize: 10, backgroundColor: "rgba(255,255,255,.9)", padding: [2, 4], borderRadius: 3 },
         emphasis: { focus: "adjacency", lineStyle: { opacity: 1 } },
         select: { itemStyle: { borderColor: "#101828", borderWidth: 3 }, lineStyle: { opacity: 1 } }
       }]

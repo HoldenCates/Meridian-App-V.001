@@ -1,9 +1,11 @@
 const assert = require("node:assert/strict");
+const crypto = require("node:crypto");
 const fs = require("node:fs");
 const path = require("node:path");
 
 const html = fs.readFileSync(path.join(__dirname, "..", "index.html"), "utf8");
 const appSource = fs.readFileSync(path.join(__dirname, "..", "src", "app.js"), "utf8");
+const styles = fs.readFileSync(path.join(__dirname, "..", "src", "styles.css"), "utf8");
 const ids = [...html.matchAll(/\sid="([^"]+)"/g)].map(match => match[1]);
 assert.equal(new Set(ids).size, ids.length, "HTML IDs must be unique");
 
@@ -21,5 +23,20 @@ assert.match(html, /<script src="src\/ui\.js"><\/script>/);
 assert.match(appSource, /function renderCaseList\(\)/);
 assert.match(appSource, /function inspectOpportunity\(opportunity\)/);
 assert.match(appSource, /setImportStatus\("good", "Dataset ready"/);
+assert.match(styles, /font-family:\"Geist Pixel Square\"/);
+assert.match(styles, /font-family:\"IBM Plex Mono\"/);
+assert.match(styles, /--accent-600:#c9a227/);
+["GeistPixel-Square.woff2", "IBMPlexMono-Regular.woff2", "IBMPlexMono-SemiBold.woff2", "LICENSE-Geist.txt", "LICENSE-IBM-Plex.txt"].forEach(file => {
+  assert.ok(fs.existsSync(path.join(__dirname, "..", "vendor", "fonts", file)), `Missing vendored font asset ${file}`);
+});
+const fontHashes = {
+  "GeistPixel-Square.woff2": "80887AFEDE26BC861E92DBFBB17A775D769E46E7C84F336B1C9F17959F60606D",
+  "IBMPlexMono-Regular.woff2": "BA204497F16B6D334CEE9D1E963A831B73E3A56E1D6300A8489D18DF7214B350",
+  "IBMPlexMono-SemiBold.woff2": "6A825B4824C01CBB401E829E5A066A1818411BCB3538B5A5792C5CA9B82343C3"
+};
+Object.entries(fontHashes).forEach(([file, hash]) => {
+  const bytes = fs.readFileSync(path.join(__dirname, "..", "vendor", "fonts", file));
+  assert.equal(crypto.createHash("sha256").update(bytes).digest("hex").toUpperCase(), hash, `Unexpected font bytes for ${file}`);
+});
 
 console.log("UI structure checks passed.");

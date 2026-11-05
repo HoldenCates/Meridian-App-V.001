@@ -30,6 +30,7 @@
         .sort((left, right) => new Date(left.timestamp) - new Date(right.timestamp));
       if (!sorted.length) return null;
       const waits = sorted.slice(1).map((event, index) => ({
+        order_id,
         from: sorted[index].activity,
         to: event.activity,
         hours: hoursBetween(sorted[index].timestamp, event.timestamp)
@@ -45,6 +46,7 @@
         end: sorted.at(-1).timestamp,
         departments: [...new Set(sorted.map(event => event.department).filter(Boolean))],
         rework: new Set(activityNames).size < activityNames.length,
+        reworkCost: sorted.reduce((sum, event, index) => sum + (activityNames.indexOf(event.activity) < index ? Number(event.event_cost) || 0 : 0), 0),
         late: cycle > 24,
         variant: activityNames.join(" → "),
         cost: sorted.reduce((sum, event) => sum + (Number(event.event_cost) || 0), 0)
@@ -98,7 +100,48 @@
     })).sort((left, right) => right.count - left.count || left.avgCycle - right.avgCycle);
   }
 
-  const api = { requiredColumns, parseCsv, validateEvents, analyzeEvents, filterOrders, summarizeOrders, buildVariants };
+  function rankOpportunities(orders, assumptions = {}) {
+    const waitTargetHours = Math.max(0, Number(assumptions.waitTargetHours) || 0);
+    const valuePerHour = Math.max(0, Number(assumptions.valuePerHour) || 0);
+    const transitions = orders.flatMap(order => order.waits).reduce((acc, wait) => {
+      const key = `${wait.from} → ${wait.to}`;
+      if (wait.hours > waitTargetHours) {
+        const item = acc[key] ??= { title: `Reduce ${key} waiting`, excessHours: 0, orderIds: new Set(), occurrences: 0 };
+        item.excessHours += wait.hours - waitTargetHours;
+        item.orderIds.add(wait.order_id);
+        item.occurrences += 1;
+      }
+      return acc;
+    }, {});
+    const delayOpportunities = Object.values(transitions).map(item => ({
+      type: "Flow delay",
+      title: item.title,
+      affectedOrders: item.orderIds.size,
+      occurrences: item.occurrences,
+      recoverableHours: item.excessHours,
+      estimatedValue: item.excessHours * valuePerHour,
+      valueLabel: "Modeled capacity value",
+      confidence: item.occurrences >= 5 ? "Strong" : item.occurrences >= 3 ? "Moderate" : "Directional",
+      evidence: `${item.occurrences} waits exceeded the ${waitTargetHours}-hour handoff target.`
+    }));
+    const reworkOrders = orders.filter(order => order.rework);
+    const reworkCost = reworkOrders.reduce((sum, order) => sum + order.reworkCost, 0);
+    const reworkOpportunity = reworkOrders.length ? [{
+      type: "Rework",
+      title: "Prevent repeated fulfillment activities",
+      affectedOrders: reworkOrders.length,
+      occurrences: reworkOrders.length,
+      recoverableHours: 0,
+      estimatedValue: reworkCost,
+      valueLabel: "Observed duplicate handling cost",
+      confidence: reworkOrders.length >= 5 ? "Strong" : reworkOrders.length >= 3 ? "Moderate" : "Directional",
+      evidence: `${reworkOrders.length} orders repeated an activity; value uses duplicate event_cost only.`
+    }] : [];
+    return [...delayOpportunities, ...reworkOpportunity]
+      .sort((left, right) => right.estimatedValue - left.estimatedValue || right.affectedOrders - left.affectedOrders);
+  }
+
+  const api = { requiredColumns, parseCsv, validateEvents, analyzeEvents, filterOrders, summarizeOrders, buildVariants, rankOpportunities };
   root.MeridianAnalysis = api;
   if (typeof module !== "undefined" && module.exports) module.exports = api;
 })(typeof window !== "undefined" ? window : globalThis);

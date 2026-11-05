@@ -1,24 +1,5 @@
-const activities = ["Order received", "Payment verified", "Inventory checked", "Order picked", "Order packed", "Shipment created", "Order shipped"];
-const baseTimes = [
-  ["2026-10-01T08:00:00", "2026-10-01T08:05:00", "2026-10-01T08:20:00", "2026-10-01T09:00:00", "2026-10-01T09:20:00", "2026-10-01T09:30:00", "2026-10-01T13:00:00"],
-  ["2026-10-01T09:10:00", "2026-10-01T09:18:00", "2026-10-01T09:30:00", "2026-10-01T10:15:00", "2026-10-01T10:30:00", "2026-10-01T10:42:00", "2026-10-01T14:10:00"],
-  ["2026-10-02T08:30:00", "2026-10-02T08:37:00", "2026-10-02T08:50:00", "2026-10-02T12:20:00", "2026-10-02T12:45:00", "2026-10-02T13:00:00", "2026-10-03T10:30:00"],
-  ["2026-10-02T10:00:00", "2026-10-02T10:07:00", "2026-10-02T10:18:00", "2026-10-02T10:45:00", "2026-10-02T11:00:00", "2026-10-02T11:15:00", "2026-10-02T15:00:00"],
-  ["2026-10-03T08:15:00", "2026-10-03T08:20:00", "2026-10-03T08:35:00", "2026-10-03T09:00:00", "2026-10-03T09:25:00", "2026-10-03T09:35:00", "2026-10-03T12:00:00"],
-  ["2026-10-03T11:00:00", "2026-10-03T11:08:00", "2026-10-03T11:20:00", "2026-10-03T14:30:00", "2026-10-03T15:00:00", "2026-10-03T15:20:00", "2026-10-05T09:30:00"],
-  ["2026-10-04T09:00:00", "2026-10-04T09:05:00", "2026-10-04T09:15:00", "2026-10-04T09:40:00", "2026-10-04T10:00:00", "2026-10-04T10:12:00", "2026-10-04T13:00:00"],
-  ["2026-10-04T13:10:00", "2026-10-04T13:18:00", "2026-10-04T13:30:00", "2026-10-04T14:00:00", "2026-10-04T14:18:00", "2026-10-04T14:30:00", "2026-10-04T17:00:00"]
-];
-const resources = ["Avery", "Jordan", "Morgan", "Riley"];
-const syntheticEvents = baseTimes.flatMap((times, index) => times.map((timestamp, activityIndex) => ({
-  order_id: `ORD-${String(index + 1).padStart(3, "0")}`,
-  activity: activities[activityIndex], timestamp,
-  department: activityIndex < 3 ? "Order Desk" : activityIndex < 5 ? "Warehouse" : "Shipping",
-  resource: resources[(index + activityIndex) % resources.length], event_cost: activityIndex < 3 ? 1.5 : activityIndex < 5 ? 4.5 : 2.5
-})));
-syntheticEvents.splice(18, 0, { order_id: "ORD-003", activity: "Order picked", timestamp: "2026-10-02T12:05:00", department: "Warehouse", resource: "Riley", event_cost: 4.5 });
-
-const { parseCsv, validateEvents, analyzeEvents, filterOrders, summarizeOrders, buildVariants } = window.MeridianAnalysis;
+const { parseCsv, validateEvents, analyzeEvents, filterOrders, summarizeOrders, buildVariants, rankOpportunities } = window.MeridianAnalysis;
+const { syntheticEvents } = window.MeridianSampleData;
 const escapeHtml = value => String(value).replace(/[&<>'"]/g, character => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", "'": "&#39;", '"': "&quot;" }[character]));
 let currentOrders = analyzeEvents(syntheticEvents);
 let currentSource = "synthetic pilot data";
@@ -63,6 +44,9 @@ function render() {
   renderTimeline(analysis.orders[0]?.order_id);
   const variants = buildVariants(filteredOrders);
   document.querySelector("#variants").innerHTML = variants.length ? variants.map((variant, index) => `<tr><td>${index + 1}</td><td class="variant-path">${escapeHtml(variant.path)}</td><td>${variant.count}</td><td>${variant.avgCycle.toFixed(1)} hrs</td><td>${variant.late}</td><td>${variant.rework}</td></tr>`).join("") : `<tr><td colspan="6" class="muted">No process variants match the selected filters.</td></tr>`;
+  const assumptions = { waitTargetHours: document.querySelector("#wait-target").value, valuePerHour: document.querySelector("#hour-value").value };
+  const opportunities = rankOpportunities(filteredOrders, assumptions).slice(0, 5);
+  document.querySelector("#opportunities").innerHTML = opportunities.length ? opportunities.map((opportunity, index) => `<article class="opportunity"><div class="opportunity-rank">${index + 1}</div><div><div class="opportunity-heading"><strong>${escapeHtml(opportunity.title)}</strong><span class="pill ${opportunity.confidence === "Strong" ? "good" : "warn"}">${opportunity.confidence} evidence</span></div><p>${escapeHtml(opportunity.evidence)}</p><div class="opportunity-impact"><span><b>${opportunity.affectedOrders}</b> affected orders</span><span><b>${opportunity.recoverableHours.toFixed(1)}</b> recoverable hours</span><span><b>$${opportunity.estimatedValue.toFixed(2)}</b> ${escapeHtml(opportunity.valueLabel.toLowerCase())}</span></div></div></article>`).join("") : `<p class="muted">No opportunities exceed the current assumptions.</p>`;
 }
 
 document.querySelector("#csv-file").addEventListener("change", event => {
@@ -79,6 +63,7 @@ document.querySelector("#csv-file").addEventListener("change", event => {
 });
 
 document.querySelectorAll("#department-filter, #status-filter, #from-filter, #to-filter").forEach(control => control.addEventListener("change", render));
+document.querySelectorAll("#wait-target, #hour-value").forEach(control => control.addEventListener("input", render));
 document.querySelector("#reset-filters").addEventListener("click", () => {
   document.querySelector("#department-filter").value = "all";
   document.querySelector("#status-filter").value = "all";

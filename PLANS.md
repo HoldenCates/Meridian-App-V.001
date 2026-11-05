@@ -21,4 +21,11 @@
 - [x] Add a sample order event log
 - [x] Add filters and process-variant comparison
 - [x] Add automated checks for analysis calculations
+
+## Phase 03 — Stakeholder review
+
+- [x] Expand the synthetic dataset for meaningful review
+- [x] Define stakeholder decision questions
+- [x] Rank opportunities by time and modeled financial impact
+- [x] Expose assumptions and financial guardrails
 - [ ] Review results with Meridian stakeholders

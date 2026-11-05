@@ -18,6 +18,8 @@ Each order follows some or all of these activities:
 
 Some orders intentionally contain delays, rework, or missing activity records.
 
+The built-in fictional dataset contains 24 orders across multiple process variants so stakeholder review can test filters, evidence, and opportunity ranking.
+
 ## Required event fields
 
 | Field | Meaning |
@@ -36,6 +38,8 @@ Some orders intentionally contain delays, rework, or missing activity records.
 - How much rework occurs?
 - Which orders are late or at risk of being late?
 - Which department shows the strongest improvement opportunity?
+- How much fulfillment time appears recoverable under an agreed handoff target?
+- What modeled capacity value could that recovered time represent?
 
 ## Initial metrics
 
@@ -45,6 +49,16 @@ Some orders intentionally contain delays, rework, or missing activity records.
 - Rework rate
 - Orders analyzed
 - Estimated event cost
+- Recoverable hours above an adjustable handoff target
+- Modeled capacity value using an adjustable value-per-hour assumption
+
+## Opportunity-model guardrails
+
+- Financial figures are planning estimates, not accounting results or promised savings.
+- Delay value equals hours above the selected handoff target multiplied by the selected value per recovered fulfillment hour.
+- Rework value uses only the event_cost of repeated activities.
+- Delay and rework findings retain their supporting order evidence and confidence level.
+- Opportunity values can overlap and must not be summed into a total benefit.
 
 ## Acceptance criteria
 

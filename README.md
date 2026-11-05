@@ -15,14 +15,18 @@ Synthetic order events are transformed into:
 - Rework and late-shipment detection
 - Filters by department, status, and order start date
 - Process-variant comparison
+- Ranked improvement opportunities with adjustable assumptions
 - Order-level evidence timelines
 
 The dataset is intentionally fictional and must not be treated as a finding about Meridian’s real operations.
+
+Financial figures are scenario estimates. Delay value is calculated from recoverable fulfillment hours and a user-selected hourly value; rework value uses duplicate event cost. Neither represents booked savings.
 
 ## Project layout
 
 - `index.html` — portable app shell
 - `src/analysis.js` — reusable, tested analysis logic
+- `src/sample-data.js` — deterministic 24-order fictional pilot dataset
 - `src/app.js` — synthetic data and browser interactions
 - `data/sample-orders.csv` — sample event log for the CSV importer
 - `tests/analysis.test.js` — automated calculation checks
@@ -36,4 +40,4 @@ Select a CSV with `order_id`, `activity`, and `timestamp` columns. Department, r
 
 ## Verify the calculations
 
-With Node.js installed, run `node tests/analysis.test.js`. The tests cover CSV parsing, validation, cycle-time status, rework, filtering, totals, and process variants.
+With Node.js installed, run `node tests/analysis.test.js`. The tests cover CSV parsing, validation, cycle-time status, rework, filtering, totals, process variants, and opportunity calculations.

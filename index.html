@@ -49,8 +49,19 @@
     footer { color:var(--muted); font-size:12px; margin-top:20px; }
     .variants-card { margin-top:18px; overflow-x:auto; }
     .variant-path { min-width:420px; }
+    .review-grid { display:grid; grid-template-columns:.8fr 1.2fr; gap:18px; margin-top:18px; }
+    .questions { margin:0; padding-left:20px; }
+    .questions li { margin:10px 0; }
+    .assumptions { display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-top:14px; }
+    .opportunity { display:grid; grid-template-columns:34px 1fr; gap:12px; padding:14px 0; border-bottom:1px solid var(--line); }
+    .opportunity:last-child { border-bottom:0; }
+    .opportunity-rank { width:30px; height:30px; display:grid; place-items:center; border-radius:50%; background:#e8f1ff; color:var(--blue); font-weight:700; }
+    .opportunity-heading { display:flex; justify-content:space-between; gap:10px; }
+    .opportunity p { color:var(--muted); font-size:13px; margin:6px 0 9px; }
+    .opportunity-impact { display:flex; flex-wrap:wrap; gap:16px; font-size:12px; }
     @media (max-width:850px) { .grid,.layout { grid-template-columns:1fr 1fr; } .layout { grid-template-columns:1fr; } .filters { grid-template-columns:1fr 1fr; } .import-row { align-items:flex-start; flex-direction:column; } }
-    @media (max-width:560px) { .grid { grid-template-columns:1fr 1fr; } }
+    @media (max-width:850px) { .review-grid { grid-template-columns:1fr; } }
+    @media (max-width:560px) { .grid { grid-template-columns:1fr 1fr; } .assumptions { grid-template-columns:1fr; } }
   </style>
 </head>
 <body>
@@ -74,10 +85,16 @@
       <div class="card"><h2>Efficiency findings</h2><div id="findings"></div></div>
       <div class="card"><h2>Order evidence</h2><p style="color:#64748b;font-size:13px">Select an order to inspect its timeline.</p><div id="orders"></div><div id="timeline" class="timeline"></div></div>
     </section>
+    <section class="review-grid">
+      <div class="card"><h2>Stakeholder review questions</h2><ol class="questions"><li>Which handoff should we improve first?</li><li>Which orders and process paths prove the issue?</li><li>How much time and modeled value could be recovered?</li><li>What target and financial assumption should Meridian approve?</li></ol><p class="muted">These questions turn the pilot from a dashboard into a decision tool.</p></div>
+      <div class="card"><h2>Opportunity assumptions</h2><p class="muted">Adjust these values during review. They are planning assumptions—not accounting results.</p><div class="assumptions"><div class="filter"><label for="wait-target">Maximum handoff wait (hours)</label><input id="wait-target" type="number" min="0" step="0.5" value="2"></div><div class="filter"><label for="hour-value">Value per recovered fulfillment hour ($)</label><input id="hour-value" type="number" min="0" step="5" value="35"></div></div><p class="muted">Modeled capacity value = hours above the handoff target × value per recovered hour. Rework uses duplicate event cost only. Opportunities can overlap and should not be added together.</p></div>
+    </section>
+    <section class="card variants-card"><h2>Ranked improvement opportunities</h2><p class="muted">Prioritized from the currently filtered orders using the assumptions above.</p><div id="opportunities"></div></section>
     <section class="card variants-card"><h2>Process variants</h2><p class="muted">Compare the actual paths orders followed. Repeated steps expose rework and alternate paths.</p><table><thead><tr><th>#</th><th>Activity path</th><th>Orders</th><th>Avg. cycle</th><th>Late</th><th>Rework</th></tr></thead><tbody id="variants"></tbody></table></section>
-    <footer>V.001 vertical slice: event log → data-quality report → filters → process variants → evidence-backed findings.</footer>
+    <footer>V.001 vertical slice: event log → data-quality report → filters → variants → ranked, evidence-backed opportunities.</footer>
   </main>
   <script src="src/analysis.js"></script>
+  <script src="src/sample-data.js"></script>
   <script src="src/app.js"></script>
 </body>
 </html>

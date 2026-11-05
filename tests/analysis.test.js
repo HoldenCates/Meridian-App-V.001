@@ -1,5 +1,6 @@
 const assert = require("node:assert/strict");
-const { parseCsv, validateEvents, analyzeEvents, filterOrders, summarizeOrders, buildVariants } = require("../src/analysis.js");
+const { parseCsv, validateEvents, analyzeEvents, filterOrders, summarizeOrders, buildVariants, rankOpportunities } = require("../src/analysis.js");
+const { syntheticEvents } = require("../src/sample-data.js");
 
 const csv = `order_id,activity,timestamp,department,event_cost
 A,Received,2026-01-01T08:00:00,Desk,1
@@ -28,6 +29,20 @@ assert.equal(summary.totalCost, 14);
 assert.equal(summary.lateRate, 0.5);
 assert.equal(summary.reworkRate, 0.5);
 assert.equal(buildVariants(orders).length, 2);
+assert.equal(orders.find(order => order.order_id === "A").reworkCost, 2);
+
+const opportunities = rankOpportunities(orders, { waitTargetHours: 2, valuePerHour: 10 });
+assert.equal(opportunities[0].type, "Flow delay");
+assert.equal(opportunities[0].recoverableHours, 21);
+assert.equal(opportunities[0].estimatedValue, 210);
+assert.equal(opportunities.find(opportunity => opportunity.type === "Rework").estimatedValue, 2);
+
+const pilotOrders = analyzeEvents(syntheticEvents);
+assert.equal(pilotOrders.length, 24);
+assert.ok(pilotOrders.filter(order => order.late).length >= 5);
+assert.ok(pilotOrders.filter(order => order.rework).length >= 5);
+assert.ok(buildVariants(pilotOrders).length >= 3);
+assert.ok(rankOpportunities(pilotOrders, { waitTargetHours: 2, valuePerHour: 35 }).length >= 2);
 
 const invalid = validateEvents([{ order_id: "A", activity: "Received", timestamp: "not-a-date" }], ["order_id", "activity", "timestamp"]);
 assert.equal(invalid.invalidTimestamps, 1);
